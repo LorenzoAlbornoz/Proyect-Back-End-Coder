@@ -1,4 +1,4 @@
-const fs = require('fs')
+import fs from 'fs'
 
 class ProductManager {
   constructor(path) {
@@ -166,4 +166,3 @@ const newProduct =  [
     product1.addProduct(product);
 });
 
-module.exports = ProductManager;

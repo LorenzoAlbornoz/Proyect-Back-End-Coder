@@ -1,5 +1,5 @@
-const express = require ("express");
-const ProductManager = require('./src/index')
+import express from 'express'
+import ProductManager from './src/index'
 
 const PORT = 8080;
 
