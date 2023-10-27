@@ -9,19 +9,28 @@ app.use(express.urlencoded({ extended: true }));
 const productManager = new ProductManager('./products.json');
 
 app.get('/products', async (req, res) => {
-  try {
+    try {
       const limit = req.query.limit;
-      const products = await productManager.getProducts(limit);
-      if (products) {
-          res.send(products);
+      const allProducts = await productManager.getProducts();
+  
+      if (limit) {
+        const limitInt = parseInt(limit);
+  
+        // numero entero y positivo
+        if (!isNaN(limitInt) && limitInt > 0) {
+            // seleccionamos solo la cantidad de productos especificados por limit
+          const limitedProducts = allProducts.slice(0, limitInt);
+          res.send(limitedProducts);
+        } else {
+          res.status(400).json({ error: 'El parámetro limit debe ser un número entero positivo' });
+        }
       } else {
-          res.status(404).json({ error: 'Los productos no existen' });
+        res.send(allProducts);
       }
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ error: 'Error al obtener los productos' });
-  }
-});
-
+    }
+  });
 
 app.get('/products/:pid', async (req, res) => {
     try {
@@ -36,6 +45,7 @@ app.get('/products/:pid', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener el producto' });
     }
 });
+
 
 app.listen(PORT, () => {
     console.log(`Servidor express activo en puerto ${PORT}`);
