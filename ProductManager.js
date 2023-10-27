@@ -18,7 +18,7 @@ export default class ProductManager {
     try {
       const data = await fs.promises.readFile(this.path, "utf-8");
       const products = JSON.parse(data);
-      console.log(products);
+      return products
     } catch (error) {
       console.error("Error al leer el archivo:", error);
     }
@@ -29,11 +29,7 @@ export default class ProductManager {
       const data = await fs.promises.readFile(this.path, "utf-8");
       const products = JSON.parse(data);
       const product = products.find((product) => product.id === id);
-      if (product) {
-        console.log("Producto encontrado:", product);
-      } else {
-        console.log("Producto no encontrado");
-      }
+     return product
     } catch (error) {
       console.error("Error al buscar el producto por ID:", error);
     }
@@ -77,4 +73,6 @@ export default class ProductManager {
     }
   }
 }
+
+
 
