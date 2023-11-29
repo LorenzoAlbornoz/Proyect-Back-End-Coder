@@ -55,28 +55,15 @@ export default class ProductManager {
       const products = JSON.parse(data);
   
       const productIndex = products.findIndex((product) => product.id === id);
-  
-      if (productIndex !== -1) {
-        // Realiza la actualización de datos
-        products[productIndex] = { ...products[productIndex], ...newProductData };
-  
-        // Escribe los datos actualizados en el archivo
-        await fs.promises.writeFile(this.path, JSON.stringify(products, null, 2));
-  
-        console.log('Producto actualizado:', products[productIndex]);
-        return products[productIndex]; // Devuelve el producto actualizado
-      } else {
-        console.log('Producto no encontrado, no se pudo actualizar.');
-        return null; // Devuelve null si el producto no se encontró
-      }
+
+      const updatedProduct = { ...products[productIndex], ...newProductData };
+      products[productIndex] = updatedProduct;
     } catch (error) {
       console.error('Error al actualizar el producto:', error);
       throw error; // Reenvía el error para manejarlo en el controlador
     }
   }
   
-  
-
   async deleteProduct(id) {
     try {
       const data = await fs.promises.readFile(this.path, 'utf-8');
