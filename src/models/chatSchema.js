@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import User from './userSchema.js'
 
 mongoose.pluralize(null);
 
@@ -8,7 +7,6 @@ const collection = 'chatMessages';
 const chatSchema = new mongoose.Schema({
   username: {
     type: String,
-    ref: User,
     required: true,
   },
   message: {
@@ -22,3 +20,4 @@ const chatSchema = new mongoose.Schema({
 });
 
 export default mongoose.model(collection, chatSchema);
+

@@ -37,7 +37,7 @@ router.post('/', uploader.single('image'), async (req, res) => {
     res.status(200).send({ status: 'OK', data: result })
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', uploader.single('image'),async (req, res) => {
     const { id } = req.params;
     if (!req.file) return res.status(400).send({ status: 'FIL', data: 'No se pudo subir el archivo' })
 

@@ -5,7 +5,7 @@ const router = Router()
 const controller = new ChatController()
 
 // Solo habilitamos un endpoint /chat para probar el chat websockets
-router.get('/chat', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const chat = await controller.getChat();
         res.render('chat', {
