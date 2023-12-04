@@ -61,7 +61,7 @@ io.on('connection', async (socket) => {
         // Guardar el mensaje en MongoDB usando el controlador
         try {
             await chatController.addChat({
-                username: data.user,
+                username: data.username,
                 message: data.message
             });
             console.log('Mensaje guardado en MongoDB');

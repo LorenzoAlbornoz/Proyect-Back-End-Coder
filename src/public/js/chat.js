@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 socketClient.on("messagesLogs", (data) => {
   let messages = "";
   data.forEach((msg) => {
-    messages += `[${msg.user}] ${msg.message}<br />`;
+    messages += `[${msg.username}] ${msg.message}<br />`;
   });
   received_messages.innerHTML = messages;
 });

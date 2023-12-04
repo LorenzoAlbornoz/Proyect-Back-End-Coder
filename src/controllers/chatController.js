@@ -17,6 +17,7 @@ export class ChatController {
   async getChat() {
     try {
       const chat = await ChatMessage.find().lean();
+      console.log('Datos recuperados:', chat); // Agrega este log para verificar los datos
       return chat;
     } catch (err) {
       console.error('Error al obtener el historial de mensajes:', err);
