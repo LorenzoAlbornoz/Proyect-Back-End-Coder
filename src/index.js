@@ -6,6 +6,7 @@ import productsRouter from './routes/products.routes.js';
 import cartsRouter from './routes/carts.routes.js';
 import viewsRouter from './routes/views.routes.js';
 import usersRouter from './routes/users.routes.js';
+import { ChatController } from './controllers/chatController.js'
 import { __dirname } from './utils.js';
 
 const PORT = 8080;
@@ -19,6 +20,8 @@ try {
     console.log(`Error al conectar a MongoDB: ${err.message}`);
     process.exit(1);
 }
+
+const chatController = new ChatController();
 
 // Configuración y creación de la instancia de Express
 const app = express();
@@ -40,16 +43,32 @@ const io = new Server(httpServer, {
 // Inicialización de mensajes para el chat
 let messages = [];
 
-// Configuración de Socket.io
-io.on('connection', (socket) => {
-    socket.emit('messagesLogs', messages);
-    console.log(`Chat actual enviado a ${socket.id}`);
-    
+io.on('connection', async (socket) => {
+    // Cargar mensajes anteriores desde MongoDB usando el controlador
+    try {
+        messages = await chatController.getChat();
+        socket.emit('messagesLogs', messages);
+        console.log(`Chat actual enviado a ${socket.id}`);
+    } catch (err) {
+        console.error(`Error al cargar mensajes desde MongoDB: ${err.message}`);
+    }
+
     socket.on('user_connected', (data) => {
         socket.broadcast.emit('user_connected', data);
     });
-    
-    socket.on('message', (data) => {
+
+    socket.on('message', async (data) => {
+        // Guardar el mensaje en MongoDB usando el controlador
+        try {
+            await chatController.addChat({
+                username: data.user,
+                message: data.message
+            });
+            console.log('Mensaje guardado en MongoDB');
+        } catch (err) {
+            console.error(`Error al guardar mensaje en MongoDB: ${err.message}`);
+        }
+
         messages.push(data);
         io.emit('messagesLogs', messages);
     });
@@ -71,4 +90,3 @@ app.use('/api/carts', cartsRouter);
 app.use('/api/users', usersRouter);
 
 app.use('/static', express.static(`${__dirname}/public`));
-

@@ -20,4 +20,3 @@ const chatSchema = new mongoose.Schema({
 });
 
 export default mongoose.model(collection, chatSchema);
-
