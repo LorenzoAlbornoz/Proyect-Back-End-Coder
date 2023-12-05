@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import Category from './categorySchema.js'
 
 mongoose.pluralize(null)
 
@@ -17,6 +18,10 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Category
+    },
     image: {
         type: String
     },
@@ -29,6 +34,5 @@ const productSchema = new mongoose.Schema({
         required: true
     }
 })
-;
 
 export default mongoose.model(collection, productSchema)
