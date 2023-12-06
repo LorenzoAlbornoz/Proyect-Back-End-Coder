@@ -1,0 +1,26 @@
+<!-- Layout principal -->
+<h1>{{title}}</h1>
+
+<!-- Listado de productos -->
+{{#each products}}
+  <div>
+    <h2>{{this.title}}</h2>
+    <p>Descripción: {{this.description}}</p>
+    <p>Precio: ${{this.price}}</p>
+    <p>Categoría: {{this.category.name}}</p>
+    <p>Fotos: {{this.image}}</p>
+    <p>Código: {{this.code}}</p>
+    <p>Stock: {{this.stock}}</p>
+  </div>
+{{/each}}
+
+<!-- Paginación -->
+<nav aria-label="Paginacion">
+  <ul class="pagination">
+    {{#if hasPrevPage}}<li class="page-item"><a class="page-link" href="/products?page={{prevPage}}">Ant</a></li>{{/if}}
+    {{#each pages}}
+      <li class="page-item"><a class="page-link" href="/products?page={{this}}">{{this}}</a></li>
+    {{/each}}
+    {{#if hasNextPage}}<li class="page-item"><a class="page-link" href="/products?page={{nextPage}}">Sig</a></li>{{/if}}
+  </ul>
+</nav>

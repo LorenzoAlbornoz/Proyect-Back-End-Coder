@@ -2,30 +2,51 @@ import Product from '../models/productSchema.js'
 import cloudinary from 'cloudinary'
 
 export const getAllProducts = async (req, res) => {
-    const products = await Product.find().populate("category")
+  try {
+    const { limit = 10, page = 1, sort, query } = req.query;
 
-    try {
-        if (!products) {
-            return res.status(404).json({
-                mensaje: "Productos no encontrados",
-                status: 404
-            });
-        }
+    let filter = {};
+    let sortOption = {};
 
-        return res.status(200).json({
-            mensaje: "Productos encontrados",
-            status: 200,
-            products
-        });
-
-    } catch {
-        return res.status(500).json({
-            mensaje: "Hubo un error, inténtelo más tarde",
-            status: 500
-        })
+    // Aplica filtro por categoría si se proporciona el parámetro query
+    if (query) {
+      filter = { $or: [{ category: query }] };
     }
-}
 
+    // Aplica ordenamiento por precio si se proporciona el parámetro sort
+    if (sort) {
+      sortOption = { price: sort === 'asc' ? 1 : -1 };
+    }
+
+    // Utiliza el método paginate de Mongoose para obtener la paginación
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: sortOption,
+    };
+
+    const result = await Product.paginate(filter, options);
+
+    res.render('products', {
+      title: 'Listado de Productos',
+      products: result.docs,
+      totalPages: result.totalPages,
+      prevPage: result.hasPrevPage ? result.prevPage : null,
+      nextPage: result.hasNextPage ? result.nextPage : null,
+      page: result.page,
+      hasPrevPage: result.hasPrevPage,
+      hasNextPage: result.hasNextPage,
+      prevLink: result.hasPrevPage ? `/products?limit=${limit}&page=${result.prevPage}&sort=${sort}&query=${query}` : null,
+      nextLink: result.hasNextPage ? `/products?limit=${limit}&page=${result.nextPage}&sort=${sort}&query=${query}` : null,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 'error',
+      mensaje: 'Hubo un error, inténtelo más tarde',
+    });
+  }
+};
 
 export const getProductByID = async (req, res) => {
     const { _id } = req.params;
@@ -171,6 +192,7 @@ export const deleteProduct = async (req, res) => {
       product
     });
     } catch (error) {
+      console.log(error)
       return res.status(500).json({
         mensaje: "Hubo un error, inténtelo más tarde",
         status: 500

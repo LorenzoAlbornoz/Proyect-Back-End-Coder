@@ -1,13 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
+import handlebars from 'express-handlebars'
 import cors from "cors"
 import cloudinary from 'cloudinary'
 
+import { __dirname } from './utils.js'
 import mongoDBConnection from './database/db.js'
 import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
+// import viewsRouter from './routes/views.routes.js'
 // import usersRouter from './routes/users.routes.js';
 
 const app = express();
@@ -17,12 +20,19 @@ app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.engine('handlebars', handlebars.engine())
+app.set('views', `${__dirname}/views`)
+app.set('view engine', 'handlebars')
+
 cloudinary.config({
     cloud_name:process.env.CLOUD_NAME,
     api_key:process.env.APY_KEY,
     api_secret: process.env.APY_SECRET
 });
 
+
+
+// app.use('/', viewsRouter)
 app.use(process.env.API, cartsRouter);
 app.use(process.env.API, categoryRouter)
 app.use(process.env.API, productsRouter);

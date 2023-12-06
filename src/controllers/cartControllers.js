@@ -1,5 +1,5 @@
 import cartModel from '../models/cartSchema.js'
-
+import productModel from '../models/productSchema.js'
 
 export const createCart = async (req, res) => {
 
@@ -61,7 +61,7 @@ export const addProductToCart = async (req, res) => {
             });
         }
 
-        const product = await cartModel.findById(productId);
+        const product = await productModel.findById(productId);
 
         if (!product) {
             return res.status(404).json({
