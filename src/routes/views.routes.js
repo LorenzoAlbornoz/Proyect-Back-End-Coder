@@ -109,6 +109,7 @@ router.delete('/cart/:cartId/product/:productId', async (req, res) => {
             res.status(404).json({ error: 'El producto no está en el carrito' });
         }
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
     }
 });

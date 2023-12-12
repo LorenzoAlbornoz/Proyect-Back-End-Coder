@@ -94,6 +94,7 @@ export class CartController {
               const updatedCart = await cart.save();
               return updatedCart;
           } else {
+            res.status(204).send();
               return null; // El producto no estaba en el carrito
           }
       } catch (error) {
