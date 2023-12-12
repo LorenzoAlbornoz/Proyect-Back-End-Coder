@@ -10,7 +10,7 @@ import mongoDBConnection from './database/db.js'
 import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
-// import viewsRouter from './routes/views.routes.js'
+import viewsRouter from './routes/views.routes.js'
 // import usersRouter from './routes/users.routes.js';
 
 const app = express();
@@ -20,9 +20,16 @@ app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.engine('handlebars', handlebars.engine())
-app.set('views', `${__dirname}/views`)
-app.set('view engine', 'handlebars')
+// Configurar Handlebars
+app.engine('handlebars', handlebars.engine({
+    // Agregar las siguientes opciones de tiempo de ejecución
+    runtimeOptions: {
+      allowProtoPropertiesByDefault: true,
+      allowProtoMethodsByDefault: true,
+    },
+  }));
+  app.set('views', `${__dirname}/views`)
+  app.set('view engine', 'handlebars')
 
 cloudinary.config({
     cloud_name:process.env.CLOUD_NAME,
@@ -30,12 +37,10 @@ cloudinary.config({
     api_secret: process.env.APY_SECRET
 });
 
-
-
-// app.use('/', viewsRouter)
 app.use(process.env.API, cartsRouter);
 app.use(process.env.API, categoryRouter)
 app.use(process.env.API, productsRouter);
+app.use('/', viewsRouter)
 // app.use(process.env.API, usersRouter);
 
 const port = process.env.PORT

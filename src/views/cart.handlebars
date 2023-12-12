@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Carrito de Compras</title>
+</head>
+
+<body>
+  <h1>Carrito de Compras</h1>
+  <div class="cart-products">
+    {{#with cart}}
+    {{#each products}}
+    <div class="cart-product">
+      <h2>{{this.product.title}}</h2>
+      <p>Precio: ${{this.product.price}}</p>
+      <p>Cantidad: {{this.quantity}}</p>
+      <form action="/cart/{{../_id}}/product/{{this._id}}" method="PUT">
+        <label for="quantity">Nueva Cantidad:</label>
+             <input type="number" name="quantity" value="{{this.quantity}}" min="1">
+        <button type="submit">Actualizar Cantidad</button>
+      </form>
+      <form action="/cart/{{../_id}}/product/{{this.product._id}}" method="DELETE">
+        <button type="submit">Eliminar del carrito</button>
+      </form>
+    </div>
+    {{/each}}
+    {{/with}}
+  </div>
+</body>
+
+</html>
+
