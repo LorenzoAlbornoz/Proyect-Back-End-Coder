@@ -66,7 +66,7 @@ router.get('/cart/:cartId', async (req, res) => {
 });
 
 router.post('/cart/:cartId/product/:productId', async (req, res) => {
-    const cartId = req.params.cid;
+    const cartId = req.params.cartId;
     const productId = req.params.productId;
     const addProductResult = await cartController.addProductToCart(cartId, productId); // Corregir aquí
 
