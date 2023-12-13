@@ -8,7 +8,10 @@ const cartController = new CartController();
 
 router.get('/products-views', async (req, res) => {
     try {
-        const { limit = 10, page = 1, sort, category } = req.query;
+        const { limit = 5, page = 1, sort, category } = req.query;
+
+        const parsedLimit = parseInt(limit, 5);
+        const effectiveLimit = isNaN(parsedLimit) ? 5 : parsedLimit;
 
         let filter = {};
         let sortOption = {};
@@ -26,7 +29,7 @@ router.get('/products-views', async (req, res) => {
         // Utiliza el método paginate de Mongoose para obtener la paginación
         const options = {
             page: parseInt(page),
-            limit: parseInt(limit),
+            limit: effectiveLimit,
             sort: sortOption,
         };
 
@@ -91,11 +94,12 @@ router.put('/cart/:cartId/product/:productId', async (req, res) => {
             res.status(404).json({ error: 'El producto no está en el carrito' });
         }
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
     }
 });
 
-// Ruta para eliminar un producto del carrito
+
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
     const cartId = req.params.cartId;
     const productId = req.params.productId;

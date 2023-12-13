@@ -22,7 +22,6 @@
 </div>
 {{/each}}
 
-<!-- Paginación -->
 <nav aria-label="Paginacion">
   <ul class="pagination">
     {{#if hasPrevPage}}
@@ -31,11 +30,19 @@
       </li>
     {{/if}}
     
+    <li class="page-item">
+      <a class="page-link" href="/products-views?limit={{limit}}&page=1&sort={{sort}}&category={{category}}">Pg 1</a>
+    </li>
+    
     {{#each pages}}
-      <li class="page-item">
+      <li class="page-item {{#if (isEqual this ../page)}}active{{/if}}">
         <a class="page-link" href="/products-views?limit={{limit}}&page={{this}}&sort={{sort}}&category={{category}}">{{this}}</a>
       </li>
     {{/each}}
+    
+    <li class="page-item">
+      <a class="page-link" href="#">Pg {{page}} de {{totalPages}}</a>
+    </li>
     
     {{#if hasNextPage}}
       <li class="page-item">
@@ -44,6 +51,7 @@
     {{/if}}
   </ul>
 </nav>
+
 
 
 
