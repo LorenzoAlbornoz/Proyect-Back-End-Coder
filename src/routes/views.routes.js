@@ -96,15 +96,13 @@ router.put('/cart/:cartId/product/:productId', async (req, res) => {
       await cart.save();
     }
 
-    // Buscar el carrito actualizado para devolverlo en la respuesta
-    const updatedCart = await cartController.getCartById(cartId);
-
-    res.json({ message: 'Cantidad del producto actualizada exitosamente', cart: updatedCart });
+    res.json({ message: 'Cantidad del producto actualizada exitosamente' });
   } catch (error) {
-      console.log(error)
-      res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
+    console.log(error);
+    res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
   }
 });
+
 
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
   const cartId = req.params.cartId;

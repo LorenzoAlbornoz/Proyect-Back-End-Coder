@@ -35,6 +35,10 @@
 function updateQuantity(cartId, productId) {
   const newQuantity = document.getElementById(`quantity-${productId}`).value;
 
+  console.log("Cart ID:", cartId);
+  console.log("Product ID:", productId);
+  console.log("New Quantity:", newQuantity);
+
   // Usar SweetAlert para confirmar la actualización
   Swal.fire({
     title: "¿Actualizar cantidad?",
@@ -52,19 +56,27 @@ function updateQuantity(cartId, productId) {
         .then(response => {
           // Manejar la respuesta si es necesario
           console.log(response.data);
-
-          // Actualizar la cantidad en la página sin recargar
-          const quantityElement = document.getElementById(`quantity-${productId}`);
-          quantityElement.value = newQuantity;
+          
+          // Mostrar una alerta indicando que la cantidad se ha actualizado
+          Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: 'Cantidad del producto actualizada exitosamente',
+          });
         })
         .catch(error => {
           // Manejar errores si es necesario
           console.error(error);
+          // Mostrar una alerta indicando que ha ocurrido un error
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Hubo un error al actualizar la cantidad del producto',
+          });
         });
     }
   });
 }
-
 
 
     const deleteProductFromCart = async (cartId, productId) => {
@@ -89,5 +101,4 @@ function updateQuantity(cartId, productId) {
     };
   </script>
 </body>
-
 </html>
