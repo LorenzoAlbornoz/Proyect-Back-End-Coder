@@ -87,21 +87,20 @@ router.put('/cart/:cartId/product/:productId', async (req, res) => {
   const newQuantity = req.body.quantity;
 
   try {
-    const cart = await cartController.getCartById(cartId);
+    const updatedCart = await cartController.editProductQuantity(cartId, productId, newQuantity);
 
-    // Buscar y actualizar la cantidad del producto en el carrito
-    const productIndex = cart.products.findIndex(p => p.product == productId);
-    if (productIndex !== -1) {
-      cart.products[productIndex].quantity = newQuantity;
-      await cart.save();
+    // Verificar si el producto se actualizó correctamente en el carrito
+    if (updatedCart !== null) {
+      res.json({ message: 'Cantidad del producto actualizada exitosamente' });
+    } else {
+      res.status(404).json({ error: 'El producto no está en el carrito' });
     }
-
-    res.json({ message: 'Cantidad del producto actualizada exitosamente' });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
   }
 });
+
 
 
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
