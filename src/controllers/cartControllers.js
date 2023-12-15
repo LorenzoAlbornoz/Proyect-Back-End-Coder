@@ -62,8 +62,7 @@ export class CartController {
             if (!cart) {
                 return null; // El carrito no existe
             }
-    
-            const productIndex = cart.products.findIndex(product => product.product.toString() === productId);
+            const productIndex = cart.products.findIndex(product => product._id.toString() === productId);
     
             if (productIndex !== -1) {
                 // Si se encuentra el producto en el carrito, actualiza la cantidad

@@ -80,43 +80,50 @@ router.post('/cart/:cartId/product/:productId', async (req, res) => {
     }
 });
 
+
 router.put('/cart/:cartId/product/:productId', async (req, res) => {
-    const cartId = req.params.cartId;
-    const productId = req.params.productId;
-    const newQuantity = req.body.quantity;
+  const cartId = req.params.cartId;
+  const productId = req.params.productId;
+  const newQuantity = req.body.quantity;
 
-    try {
-        const updatedCart = await cartController.editProductQuantity(cartId, productId, newQuantity);
+  try {
+    const cart = await cartController.getCartById(cartId);
 
-        if (updatedCart !== null) {
-            res.status(200).json({ data: updatedCart });
-        } else {
-            res.status(404).json({ error: 'El producto no está en el carrito' });
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
+    // Buscar y actualizar la cantidad del producto en el carrito
+    const productIndex = cart.products.findIndex(p => p.product == productId);
+    if (productIndex !== -1) {
+      cart.products[productIndex].quantity = newQuantity;
+      await cart.save();
     }
-});
 
+    // Buscar el carrito actualizado para devolverlo en la respuesta
+    const updatedCart = await cartController.getCartById(cartId);
+
+    res.json({ message: 'Cantidad del producto actualizada exitosamente', cart: updatedCart });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
+  }
+});
 
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
-    const cartId = req.params.cartId;
-    const productId = req.params.productId;
+  const cartId = req.params.cartId;
+  const productId = req.params.productId;
 
-    try {
-        const updatedCart = await cartController.deleteProductFromCart(cartId, productId);
+  try {
+      const updatedCart = await cartController.deleteProductFromCart(cartId, productId);
 
-        if (updatedCart !== null) {
-            res.status(200).json({ data: updatedCart });
-        } else {
-            res.status(404).json({ error: 'El producto no está en el carrito' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
-    }
+      if (updatedCart !== null) {
+          // Enviar una respuesta JSON en lugar de redirigir
+          res.json({ success: true, cart: updatedCart });
+      } else {
+          res.status(404).json({ error: 'El producto no está en el carrito' });
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
+  }
 });
 
-export default router;
 
+export default router;

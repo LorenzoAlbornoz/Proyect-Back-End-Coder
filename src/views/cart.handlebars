@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Carrito de Compras</title>
+  <!-- Agrega la referencia a SweetAlert -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -16,19 +18,76 @@
       <h2>{{this.product.title}}</h2>
       <p>Precio: ${{this.product.price}}</p>
       <p>Cantidad: {{this.quantity}}</p>
-      <form action="/cart/{{../_id}}/product/{{this._id}}" method="PUT">
-        <label for="quantity">Nueva Cantidad:</label>
-             <input type="number" name="quantity" value="{{this.quantity}}" min="1">
-        <button type="submit">Actualizar Cantidad</button>
-      </form>
-      <form action="/cart/{{../_id}}/product/{{this.product._id}}" method="DELETE">
-        <button type="submit">Eliminar del carrito</button>
-      </form>
+      <label for="quantity">Nueva Cantidad:</label>
+      <input type="number" name="quantity" value="{{this.quantity}}" min="1" id="quantity-{{this._id}}">
+      <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')">Actualizar Cantidad</button>
+      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')">Eliminar del carrito</button>
     </div>
     {{/each}}
     {{/with}}
   </div>
+
+  <!-- Agrega la referencia a Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <!-- Script para manejar las operaciones con eventos de clic -->
+  <script>
+function updateQuantity(cartId, productId) {
+  const newQuantity = document.getElementById(`quantity-${productId}`).value;
+
+  // Usar SweetAlert para confirmar la actualización
+  Swal.fire({
+    title: "¿Actualizar cantidad?",
+    text: "¿Deseas cambiar la cantidad de este producto?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#F8A126",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Sí, actualizar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Usar Axios para enviar la solicitud de actualización con el método PUT
+      axios.put(`/cart/${cartId}/product/${productId}`, { quantity: newQuantity })
+        .then(response => {
+          // Manejar la respuesta si es necesario
+          console.log(response.data);
+
+          // Actualizar la cantidad en la página sin recargar
+          const quantityElement = document.getElementById(`quantity-${productId}`);
+          quantityElement.value = newQuantity;
+        })
+        .catch(error => {
+          // Manejar errores si es necesario
+          console.error(error);
+        });
+    }
+  });
+}
+
+
+
+    const deleteProductFromCart = async (cartId, productId) => {
+      try {
+        const result = await Swal.fire({
+          title: "¿Estás seguro?",
+          text: "No podrás revertir esto!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#F8A126",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, eliminar!",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (result.isConfirmed) {
+          await axios.delete(`/cart/${cartId}/product/${productId}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+  </script>
 </body>
 
 </html>
-
