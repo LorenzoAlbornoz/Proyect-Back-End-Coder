@@ -4,6 +4,9 @@ import express from 'express';
 import handlebars from 'express-handlebars'
 import cors from "cors"
 import cloudinary from 'cloudinary'
+import session from 'express-session'
+import FileStore from 'session-file-store'
+import MongoStore from 'connect-mongo'
 
 import { __dirname } from './utils.js'
 import mongoDBConnection from './database/db.js'
@@ -11,6 +14,7 @@ import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
 import viewsRouter from './routes/views.routes.js'
+import sessionsRouter from './routes/sessions.routes.js'
 // import usersRouter from './routes/users.routes.js';
 
 const app = express();
@@ -19,6 +23,14 @@ app.use(cors())
 app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const fileStorage = FileStore(session)
+app.use(session({
+    store: MongoStore.create({ mongoUrl: process.env.MONGODB_CONNECTION, mongoOptions: {}, ttl: 60, clearInterval: 5000 }), // MONGODB
+    secret: 'secretKeyAbc123',
+    resave: false,
+    saveUninitialized: false
+}))
 
 // Configurar Handlebars
 app.engine('handlebars', handlebars.engine({
@@ -41,6 +53,7 @@ app.use(process.env.API, cartsRouter);
 app.use(process.env.API, categoryRouter)
 app.use(process.env.API, productsRouter);
 app.use('/', viewsRouter)
+app.use(process.env.API, sessionsRouter)
 // app.use(process.env.API, usersRouter);
 
 const port = process.env.PORT

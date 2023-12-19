@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
+// import { UserController } from '../controllers/userControllers.js'
 
 const router = Router();
 const productController = new ProductController();
@@ -101,8 +102,6 @@ router.put('/cart/:cartId/product/:productId', async (req, res) => {
   }
 });
 
-
-
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
   const cartId = req.params.cartId;
   const productId = req.params.productId;
@@ -122,5 +121,26 @@ router.delete('/cart/:cartId/product/:productId', async (req, res) => {
   }
 });
 
+router.get('/login', async (req, res) => {
+  if (req.username) {
+      res.redirect('/profile');
+  } else {
+      res.render('login', {});
+  }
+});
+
+router.get('/profile', async (req, res) => {
+  if (req.username) {
+      res.render('profile', { user: requsername });
+  } else {
+      // Sino volvemos al login
+      res.redirect('/login');
+  }
+});
+
+
+router.get('/register', async (req, res) => {
+  res.render('register', {})
+})
 
 export default router;
