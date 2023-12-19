@@ -1,0 +1,93 @@
+<!-- Layout principal -->
+<h1>{{title}}</h1>
+<!-- Enlace "Ir al Carrito" -->
+<a href="/cart/656f481e78783e042315413e">Ir al Carrito</a>
+
+<!-- Listado de productos -->
+{{#each products}}
+<div>
+  <h2>{{this.title}}</h2>
+  <p>Descripción: {{this.description}}</p>
+  <p>Precio: ${{this.price}}</p>
+  {{#if this.category}}
+    <p>Categoría: {{this.category.name}}</p>
+  {{/if}}
+  <img src="{{this.image}}" alt="{{this.title}} Image" width="200" height="200">
+  <p>Código: {{this.code}}</p>
+  <p>Stock: {{this.stock}}</p>
+  
+  <!-- Botón "Agregar al Carrito" con evento de clic -->
+  <button type="button" onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+</div>
+{{/each}}
+
+<nav aria-label="Paginacion">
+  <ul class="pagination">
+    {{#if hasPrevPage}}
+      <li class="page-item">
+        <a class="page-link" href="/products-views?limit={{limit}}&page={{prevPage}}&sort={{sort}}&category={{category}}">Ant</a>
+      </li>
+    {{/if}}
+    
+    <li class="page-item">
+      <a class="page-link" href="/products-views?limit={{limit}}&page=1&sort={{sort}}&category={{category}}">Pg 1</a>
+    </li>
+    
+    {{#each pages}}
+      <li class="page-item {{#if (isEqual this ../page)}}active{{/if}}">
+        <a class="page-link" href="/products-views?limit={{limit}}&page={{this}}&sort={{sort}}&category={{category}}">{{this}}</a>
+      </li>
+    {{/each}}
+    
+    <li class="page-item">
+      <a class="page-link" href="#">Pg {{page}} de {{totalPages}}</a>
+    </li>
+    
+    {{#if hasNextPage}}
+      <li class="page-item">
+        <a class="page-link" href="/products-views?limit={{limit}}&page={{nextPage}}&sort={{sort}}&category={{category}}">Sig</a>
+      </li>
+    {{/if}}
+  </ul>
+</nav>
+
+<!-- Agrega la referencia a SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Agrega la referencia a Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- Script para manejar las operaciones con eventos de clic -->
+<script>
+  function addToCart(productId) {
+    // Usar SweetAlert para confirmar la adición al carrito
+    Swal.fire({
+      title: "¿Agregar al carrito?",
+      text: "¿Deseas agregar este producto al carrito?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#F8A126",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, agregar al carrito",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Usar Axios para enviar la solicitud de adición al carrito con el método POST
+        axios.post(`/cart/656f481e78783e042315413e/product/${productId}`)
+          .then(response => {
+            // Manejar la respuesta si es necesario
+            console.log(response.data);
+            // Opcional: Puedes mostrar un mensaje adicional al usuario con Swal.fire si la adición es exitosa
+            Swal.fire("Agregado al carrito", "El producto se ha agregado al carrito correctamente.", "success");
+          })
+          .catch(error => {
+            // Manejar errores si es necesario
+            console.error(error);
+            // Opcional: Puedes mostrar un mensaje de error con Swal.fire si hay un problema
+            Swal.fire("Error", "Hubo un problema al agregar el producto al carrito.", "error");
+          });
+      }
+    });
+  }
+</script>
+

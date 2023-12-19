@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
+// import { UserController } from '../controllers/userControllers.js'
 
 const router = Router();
 const productController = new ProductController();
@@ -80,43 +81,66 @@ router.post('/cart/:cartId/product/:productId', async (req, res) => {
     }
 });
 
+
 router.put('/cart/:cartId/product/:productId', async (req, res) => {
-    const cartId = req.params.cartId;
-    const productId = req.params.productId;
-    const newQuantity = req.body.quantity;
+  const cartId = req.params.cartId;
+  const productId = req.params.productId;
+  const newQuantity = req.body.quantity;
 
-    try {
-        const updatedCart = await cartController.editProductQuantity(cartId, productId, newQuantity);
+  try {
+    const updatedCart = await cartController.editProductQuantity(cartId, productId, newQuantity);
 
-        if (updatedCart !== null) {
-            res.status(200).json({ data: updatedCart });
-        } else {
-            res.status(404).json({ error: 'El producto no está en el carrito' });
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
+    // Verificar si el producto se actualizó correctamente en el carrito
+    if (updatedCart !== null) {
+      res.json({ message: 'Cantidad del producto actualizada exitosamente' });
+    } else {
+      res.status(404).json({ error: 'El producto no está en el carrito' });
     }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
+  }
 });
-
 
 router.delete('/cart/:cartId/product/:productId', async (req, res) => {
-    const cartId = req.params.cartId;
-    const productId = req.params.productId;
+  const cartId = req.params.cartId;
+  const productId = req.params.productId;
 
-    try {
-        const updatedCart = await cartController.deleteProductFromCart(cartId, productId);
+  try {
+      const updatedCart = await cartController.deleteProductFromCart(cartId, productId);
 
-        if (updatedCart !== null) {
-            res.status(200).json({ data: updatedCart });
-        } else {
-            res.status(404).json({ error: 'El producto no está en el carrito' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
-    }
+      if (updatedCart !== null) {
+          // Enviar una respuesta JSON en lugar de redirigir
+          res.json({ success: true, cart: updatedCart });
+      } else {
+          res.status(404).json({ error: 'El producto no está en el carrito' });
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
+  }
 });
 
-export default router;
+router.get('/login', async (req, res) => {
+  if (req.username) {
+      res.redirect('/profile');
+  } else {
+      res.render('login', {});
+  }
+});
 
+router.get('/profile', async (req, res) => {
+  if (req.username) {
+      res.render('profile', { user: requsername });
+  } else {
+      // Sino volvemos al login
+      res.redirect('/login');
+  }
+});
+
+
+router.get('/register', async (req, res) => {
+  res.render('register', {})
+})
+
+export default router;
