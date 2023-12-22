@@ -1,25 +1,40 @@
 <!-- Layout principal -->
-<h1>{{title}}</h1>
-<!-- Enlace "Ir al Carrito" -->
-<a href="/cart/656f481e78783e042315413e">Ir al Carrito</a>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+  <h1>{{title}}</h1>
+  <div style="display: flex; align-items: center; margin-left: auto;">
+    {{#if username}}
+      <p style="color: #F8A126; margin-right: 10px; margin-bottom: 0;">¡Bienvenido, {{username}}!</p>
+    {{/if}}
+    <form action="/api/logout" method="get">
+      <button type="submit" class="btn btn-success">Cerrar Sesión</button>
+    </form>
+  </div>
+</div>
+<!-- Enlace "Ir al Carrito" con margen inferior -->
+<a href="/cart/656f481e78783e042315413e" class="btn btn-info" style="margin-bottom: 10px;">Ir al Carrito</a>
 
 <!-- Listado de productos -->
-{{#each products}}
-<div>
-  <h2>{{this.title}}</h2>
-  <p>Descripción: {{this.description}}</p>
-  <p>Precio: ${{this.price}}</p>
-  {{#if this.category}}
-    <p>Categoría: {{this.category.name}}</p>
-  {{/if}}
-  <img src="{{this.image}}" alt="{{this.title}} Image" width="200" height="200">
-  <p>Código: {{this.code}}</p>
-  <p>Stock: {{this.stock}}</p>
-  
-  <!-- Botón "Agregar al Carrito" con evento de clic -->
-  <button type="button" onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+<div class="row">
+  {{#each products}}
+    <div class="col-md-6">
+      <div class="card" style="margin-bottom: 20px;">
+        <img src="{{this.image}}" class="card-img-top" alt="{{this.title}} Image" style="max-height: 150px; object-fit: contain; width: 100%;">
+        <div class="card-body">
+          <h5 class="card-title">{{this.title}}</h5>
+          <p class="card-text">Descripción: {{this.description}}</p>
+          <p class="card-text">Precio: ${{this.price}}</p>
+          {{#if this.category}}
+            <p class="card-text">Categoría: {{this.category.name}}</p>
+          {{/if}}
+          <p class="card-text">Código: {{this.code}}</p>
+          <p class="card-text">Stock: {{this.stock}}</p>
+          <!-- Botón "Agregar al Carrito" con evento de clic -->
+          <button type="button" onclick="addToCart('{{this._id}}')" class="btn btn-primary">Agregar al Carrito</button>
+        </div>
+      </div>
+    </div>
+  {{/each}}
 </div>
-{{/each}}
 
 <nav aria-label="Paginacion">
   <ul class="pagination">

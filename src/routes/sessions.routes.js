@@ -1,8 +1,11 @@
 import { Router } from 'express'
 import bcrypt from 'bcrypt';
 import User from "../models/userSchema.js"
+import { UserController } from '../controllers/userControllers.js';
 
-const router = Router()
+const router = Router();
+const userController = new UserController();
+
 
 // Creamos un pequeño middleware para una autorización básica
 // Observar que aparece next, además de req y res.
@@ -13,38 +16,16 @@ const router = Router()
 // de no autorizado.
 const auth = (req, res, next) => {
     try {
-        if (req.session.user) {
-            if (req.session.user.admin === true) {
-                next()
-            } else {
-                res.status(403).send({ status: 'ERR', data: 'Usuario no admin' })
-            }
+        if (req.session.rol === 'admin') {
+            next();
         } else {
-            res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
+            res.status(403).send({ status: 'ERR', data: 'Usuario no admin' });
         }
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
+        res.status(500).send({ status: 'ERR', data: err.message });
     }
-}
+};
 
-// Este endpoint es para testeo.
-// Si es la primer visita desde esa instancia de navegador, req.session.visits no existirá,
-// por ende se inicializará en 1 y se dará la bienvenida.
-// En sucesivas visitas, ya estará disponible en req.session, por ende solo se lo incrementará.
-// Continuará incrementando visita a visita hasta que caduque o se destruya la sesión.
-router.get('/session', async (req, res) => {
-    try {
-        if (req.session.visits) {
-            req.session.visits++
-            res.status(200).send({ status: 'OK', data: `Cantidad de visitas: ${req.session.visits}` })
-        } else {
-            req.session.visits = 1
-            res.status(200).send({ status: 'OK', data: 'Bienvenido al site!' })
-        }
-    } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
-    }
-})
 
 router.get('/logout', async (req, res) => {
     try {
@@ -53,15 +34,16 @@ router.get('/logout', async (req, res) => {
         // desde cero, creando una nueva sesión y volviendo a almacenar los datos deseados.
         req.session.destroy((err) => {
             if (err) {
-                res.status(500).send({ status: 'ERR', data: err.message })
+                res.status(500).send({ status: 'ERR', data: err.message });
             } else {
-                res.status(200).send({ status: 'OK', data: 'Sesión finalizada' })
+                // Redirige al usuario a la página de inicio de sesión después de cerrar la sesión
+                res.redirect('/login');
             }
-        })
+        });
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
+        res.status(500).send({ status: 'ERR', data: err.message });
     }
-})
+});
 
 // Este es un endpoint "privado", solo visible para admin.
 // Podemos ver que el contenido no realiza ninguna verificación, ya que la misma se hace
@@ -70,11 +52,18 @@ router.get('/logout', async (req, res) => {
 // la misma rutina en auth() cortará y retornará la respuesta con el error correspondiente.
 router.get('/admin', auth, async (req, res) => {
     try {
-        res.status(200).send({ status: 'OK', data: 'Estos son los datos privados' })
+        // Obtiene la lista de usuarios utilizando el controlador
+        const users = await userController.getUsers();
+        console.log('Users:', users);
+        // Renderiza la vista 'admin' y pasa los datos de usuarios
+        res.render('admin', {
+          title: 'Listado de Usuarios',
+          data: users
+        });
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
+        res.status(500).json({ status: 'ERR', data: err.message });
     }
-})
+});
 
 // Nuestro primer endpoint de login!, básico por el momento, con algunas
 // validacione "hardcodeadas", pero nos permite comenzar a entender los conceptos.router.post('/login', async (req, res) => {
@@ -97,8 +86,17 @@ router.get('/admin', auth, async (req, res) => {
                     status: 400,
                 });
             }
-            req.session.username = username; 
-            res.redirect('/profile')
+    
+            req.session.username = username;
+            req.session.rol = user.rol;
+    
+            if (user.rol === 'admin') {
+                // Si el usuario es admin, redirige a la página de admin
+                res.redirect('/api/admin');
+            } else {
+                // Si el usuario es user, redirige a la lista de productos
+                res.redirect('/products-views');
+            }
         } catch (error) {
             console.log(error);
             return res.status(500).json({
@@ -107,10 +105,14 @@ router.get('/admin', auth, async (req, res) => {
             });
         }
     });
+    
 
 router.post('/register', async (req, res) => {
     try {
         const { name, username, password } = req.body;
+        console.log('Name:', name);
+        console.log('Username:', username);
+        console.log('Password:', password);
         const user = await User.findOne({ username });
 
         if (user) {
@@ -127,19 +129,18 @@ router.post('/register', async (req, res) => {
         });
 
         await newUser.save();
-        res.status(201).json({
-            mensaje: "Usuario creado exitosamente",
-            status: 201,
-            newUser,
-        });
+
+        // Redirigir al usuario a la página de inicio de sesión (login) después de un registro exitoso
+        return res.redirect('/login');
+
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            mensaje: "Hubo un error, inténtelo más tarde",
-            status: 500,
+        console.log(error);
+
+        // Mantener al usuario en la página de registro en caso de un error en el registro
+        return res.render('register', {
+            errorMessage: 'Hubo un error en el registro, inténtelo de nuevo.',
         });
     }
 });
-
 
 export default router

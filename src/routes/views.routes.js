@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
-// import { UserController } from '../controllers/userControllers.js'
 
 const router = Router();
 const productController = new ProductController();
 const cartController = new CartController();
 
+
 router.get('/products-views', async (req, res) => {
     try {
+      if (req.session.username) {
         const { limit = 5, page = 1, sort, category } = req.query;
 
         const parsedLimit = parseInt(limit, 5);
@@ -26,7 +27,7 @@ router.get('/products-views', async (req, res) => {
         if (sort) {
             sortOption = { price: sort === 'asc' ? 1 : -1 };
         }
-
+      
         // Utiliza el método paginate de Mongoose para obtener la paginación
         const options = {
             page: parseInt(page),
@@ -37,6 +38,7 @@ router.get('/products-views', async (req, res) => {
         const result = await productController.paginate(filter, options);
         res.render('products', {
             title: 'Listado de Productos',
+            username: req.session.username, 
             products: result.docs,
             totalPages: result.totalPages,
             prevPage: result.hasPrevPage ? result.prevPage : null,
@@ -47,6 +49,9 @@ router.get('/products-views', async (req, res) => {
             prevLink: result.hasPrevPage ? `/products-views?limit=${limit}&page=${result.prevPage}&sort=${sort}&category=${category}` : null,
             nextLink: result.hasNextPage ? `/products-views?limit=${limit}&page=${result.nextPage}&sort=${sort}&category=${category}` : null,
         });
+      } else {
+        res.redirect('/login');
+      }
     } catch (error) {
         console.error(error);
         res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
@@ -122,22 +127,12 @@ router.delete('/cart/:cartId/product/:productId', async (req, res) => {
 });
 
 router.get('/login', async (req, res) => {
-  if (req.username) {
-      res.redirect('/profile');
+  if (req.session.username) {
+    res.redirect('/products-views');
   } else {
-      res.render('login', {});
+    res.render('login', {});
   }
 });
-
-router.get('/profile', async (req, res) => {
-  if (req.username) {
-      res.render('profile', { user: requsername });
-  } else {
-      // Sino volvemos al login
-      res.redirect('/login');
-  }
-});
-
 
 router.get('/register', async (req, res) => {
   res.render('register', {})

@@ -1,0 +1,21 @@
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+  <h1>{{title}}</h1>
+  <form action="/api/logout" method="get">
+    <button type="submit" class="btn btn-success">Cerrar Sesión</button>
+  </form>
+</div>
+
+<ul class="list-group">
+    {{#each data}}
+        <li class="list-group-item">{{this.username}}</li>
+    {{/each}}
+</ul>
+
+<nav aria-label="Paginacion">
+    <ul class="pagination">
+        {{#if data.hasPrevPage}}<li class="page-item"><a class="page-link" href="/users?page={{data.prevPage}}">Ant</a></li>{{/if}}
+        <li class="page-item"><a class="page-link" href="/users?page=1">Pg 1</a></li>
+        <li class="page-item"><a class="page-link" href="#">Pg {{data.page}} de {{data.totalPages}}</a></li>
+        {{#if data.hasNextPage}}<li class="page-item"><a class="page-link" href="/users?page={{data.nextPage}}">Sig</a></li>{{/if}}
+    </ul>
+</nav>

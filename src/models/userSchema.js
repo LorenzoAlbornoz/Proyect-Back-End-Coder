@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate-v2'
 
 mongoose.pluralize(null)
 
@@ -7,17 +8,17 @@ const collection = 'users'
 const userSchema = new mongoose.Schema({
     name: {
         type: String, 
-        require: true,
+        required: true,
         trim: true,
     },
     username:{
         type: String,
-        require: true,
+        required: true,
         trim: true
     },
     password:{
         type: String,
-        require: true,
+        required: true,
         trim: [true, "Tiene espacios"]
     },
     rol: {
@@ -27,4 +28,5 @@ const userSchema = new mongoose.Schema({
     }
 })
 
+userSchema.plugin(mongoosePaginate)
 export default mongoose.model(collection, userSchema)

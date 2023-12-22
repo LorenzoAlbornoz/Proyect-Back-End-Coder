@@ -6,10 +6,14 @@
   <title>Carrito de Compras</title>
   <!-- Agrega la referencia a SweetAlert -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Agrega la referencia a Bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    integrity="sha384-TMmyQwF/p3p1zj3SdA8JQU0fG7h1F1wTqep9SQQx1CwtXJjtjs2BPLFvQ8gCqCs"
+    crossorigin="anonymous">
 </head>
 
 <body>
-  <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc">Seguir Comprando</a>
+ <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc" class="btn btn-info" style="margin-top: 10px;">Seguir Comprando</a>
   <h1>Carrito de Compras</h1>
   <div class="cart-products">
     {{#with cart}}
@@ -20,8 +24,8 @@
       <p>Cantidad: {{this.quantity}}</p>
       <label for="quantity">Nueva Cantidad:</label>
       <input type="number" name="quantity" value="{{this.quantity}}" min="1" id="quantity-{{this._id}}">
-      <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')">Actualizar Cantidad</button>
-      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')">Eliminar del carrito</button>
+      <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')" class="btn btn-warning">Actualizar Cantidad</button>
+      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')" class="btn btn-danger">Eliminar del carrito</button>
     </div>
     {{/each}}
     {{/with}}
@@ -32,52 +36,51 @@
 
   <!-- Script para manejar las operaciones con eventos de clic -->
   <script>
-function updateQuantity(cartId, productId) {
-  const newQuantity = document.getElementById(`quantity-${productId}`).value;
+    function updateQuantity(cartId, productId) {
+      const newQuantity = document.getElementById(`quantity-${productId}`).value;
 
-  console.log("Cart ID:", cartId);
-  console.log("Product ID:", productId);
-  console.log("New Quantity:", newQuantity);
+      console.log("Cart ID:", cartId);
+      console.log("Product ID:", productId);
+      console.log("New Quantity:", newQuantity);
 
-  // Usar SweetAlert para confirmar la actualización
-  Swal.fire({
-    title: "¿Actualizar cantidad?",
-    text: "¿Deseas cambiar la cantidad de este producto?",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonColor: "#F8A126",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Sí, actualizar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // Usar Axios para enviar la solicitud de actualización con el método PUT
-      axios.put(`/cart/${cartId}/product/${productId}`, { quantity: newQuantity })
-        .then(response => {
-          // Manejar la respuesta si es necesario
-          console.log(response.data);
-          
-          // Mostrar una alerta indicando que la cantidad se ha actualizado
-          Swal.fire({
-            icon: 'success',
-            title: '¡Éxito!',
-            text: 'Cantidad del producto actualizada exitosamente',
-          });
-        })
-        .catch(error => {
-          // Manejar errores si es necesario
-          console.error(error);
-          // Mostrar una alerta indicando que ha ocurrido un error
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Hubo un error al actualizar la cantidad del producto',
-          });
-        });
+      // Usar SweetAlert para confirmar la actualización
+      Swal.fire({
+        title: "¿Actualizar cantidad?",
+        text: "¿Deseas cambiar la cantidad de este producto?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#F8A126",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, actualizar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Usar Axios para enviar la solicitud de actualización con el método PUT
+          axios.put(`/cart/${cartId}/product/${productId}`, { quantity: newQuantity })
+            .then(response => {
+              // Manejar la respuesta si es necesario
+              console.log(response.data);
+
+              // Mostrar una alerta indicando que la cantidad se ha actualizado
+              Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'Cantidad del producto actualizada exitosamente',
+              });
+            })
+            .catch(error => {
+              // Manejar errores si es necesario
+              console.error(error);
+              // Mostrar una alerta indicando que ha ocurrido un error
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al actualizar la cantidad del producto',
+              });
+            });
+        }
+      });
     }
-  });
-}
-
 
     const deleteProductFromCart = async (cartId, productId) => {
       try {
@@ -101,4 +104,5 @@ function updateQuantity(cartId, productId) {
     };
   </script>
 </body>
+
 </html>
