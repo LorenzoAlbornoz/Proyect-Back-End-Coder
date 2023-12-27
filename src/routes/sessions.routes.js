@@ -1,8 +1,12 @@
 import { Router } from 'express'
-import bcrypt from 'bcrypt';
+import passport from 'passport';
+
 import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
+import { encryptPassword, comparePassword,  generateToken } from '../utils.js';
+import initPassport from '../config/passport.config.js';
 
+initPassport()
 const router = Router();
 const userController = new UserController();
 
@@ -65,6 +69,14 @@ router.get('/admin', auth, async (req, res) => {
     }
 });
 
+router.get('/github', passport.authenticate('githubAuth', { scope: ['user:email'] }), async (req, res) => {
+});
+
+router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
+    req.session.username = req.user.username; 
+    res.redirect('/products-views');
+});
+
 // Nuestro primer endpoint de login!, básico por el momento, con algunas
 // validacione "hardcodeadas", pero nos permite comenzar a entender los conceptos.router.post('/login', async (req, res) => {
     router.post('/login', async (req, res) => {
@@ -78,14 +90,12 @@ router.get('/admin', auth, async (req, res) => {
                     status: 404,
                 });
             }
-    
-            // Comparar la contraseña directamente sin utilizar bcrypt
-            if (password !== user.password) {
+            if (!comparePassword(password, user.password)) {
                 return res.status(400).json({
-                    mensaje: "La contraseña es inválida",
-                    status: 400,
+                  mensaje: "La contraseña es invalida",
+                  status: 400,
                 });
-            }
+              }
     
             req.session.username = username;
             req.session.rol = user.rol;
@@ -105,14 +115,11 @@ router.get('/admin', auth, async (req, res) => {
             });
         }
     });
-    
 
+    
 router.post('/register', async (req, res) => {
     try {
         const { name, username, password } = req.body;
-        console.log('Name:', name);
-        console.log('Username:', username);
-        console.log('Password:', password);
         const user = await User.findOne({ username });
 
         if (user) {
@@ -125,7 +132,7 @@ router.post('/register', async (req, res) => {
         const newUser = new User({
             name,
             username,
-            password,
+            password: encryptPassword(password)
         });
 
         await newUser.save();
@@ -143,4 +150,46 @@ router.post('/register', async (req, res) => {
     }
 });
 
+    // router.post('/login', async (req, res) => {
+    //     try {
+    //         const { username, password } = req.body;
+    
+    //         // Buscar al usuario por el nombre de usuario
+    //         const user = await User.findOne({ username });
+    
+    //         if (user) {
+    //             // Si el usuario existe, comparar la contraseña
+    //             if (comparePassword(password, user.password)) {
+    //                 // Utilizando tokens JWT
+    //                 const access_token = generateToken({ username: username, admin: true }, '1h');
+    //                 res.redirect(`/profilejwt?access_token=${access_token}`);
+    //             } else {
+    //                 res.status(401).send({ status: 'ERR', data: 'Datos no válidos' });
+    //             }
+    //         } else {
+    //             res.status(401).send({ status: 'ERR', data: 'Datos no válidos' });
+    //         }
+    //     } catch (err) {
+    //         res.status(500).send({ status: 'ERR', data: err.message });
+    //     }
+    // });
+    
+    
+    // router.post('/register', passport.authenticate('registerAuth', { failureRedirect: '/api/failregister' }), async (req, res) => {
+    //     try {
+    //         res.status(200).send({ status: 'OK', data: 'Usuario registrado' })
+    //     } catch (err) {
+    //         res.status(500).send({ status: 'ERR', data: err.message })
+    //     }
+    // })
+
+router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
+    try {
+        res.status(200).send({ status: 'OK', data: 'Clave actualizada' })
+    } catch (err) {
+        res.status(500).send({ status: 'ERR', data: err.message })
+    }
+})
+
 export default router
+

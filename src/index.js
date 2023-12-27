@@ -7,6 +7,7 @@ import cloudinary from 'cloudinary'
 import session from 'express-session'
 import FileStore from 'session-file-store'
 import MongoStore from 'connect-mongo'
+import passport from 'passport'
 
 import { __dirname } from './utils.js'
 import mongoDBConnection from './database/db.js'
@@ -31,6 +32,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }))
+app.use(passport.initialize())
+app.use(passport.session())
 
 // Configurar Handlebars
 app.engine('handlebars', handlebars.engine({

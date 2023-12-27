@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import passport from 'passport';
 import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 
@@ -126,16 +127,38 @@ router.delete('/cart/:cartId/product/:productId', async (req, res) => {
   }
 });
 
+router.get('/github', passport.authenticate('githubAuth', { scope: ['user:username'] }), async (req, res) => {
+})
+
+router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
+    req.session.user = { username: req.user.email, admin: true }
+    // req.session.user = req.user
+    res.redirect('/profile')
+})
+
 router.get('/login', async (req, res) => {
   if (req.session.username) {
-    res.redirect('/products-views');
+    res.render('/products-views');
   } else {
     res.render('login', {});
   }
 });
 
+// router.get('/profilejwt', authToken, async (req, res) => {
+//   res.render('profile', { user: req.user })
+// })
+
 router.get('/register', async (req, res) => {
   res.render('register', {})
 })
+
+router.get('/restore', async (req, res) => {
+  if (req.session.user) {
+    res.redirect('/products-views');
+  } else {
+      res.render('restore', {})
+  }
+})
+
 
 export default router;
