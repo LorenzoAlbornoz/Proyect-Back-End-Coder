@@ -1,281 +1,288 @@
-import userModel from "../models/userSchema.js"
+import userModel from "../models/userSchema.js";
+import productModel from '../models/productSchema.js'
+import cartModel from '../models/cartSchema.js'
 
 export class UserController {
-    constructor() {
-    }
+    constructor() { }
 
     async getUsers() {
         try {
-            const users = await userModel.find().lean()
-            // const users = await userModel.find({ first_name: 'Celia' }).explain('executionStats')
-            return users
+            const users = await userModel.find().lean();
+            return users;
         } catch (err) {
-            return err.message
+            return err.message;
         }
-        
     }
 
+    async getUserByID(id) {
+        try {
+            const user = await userModel.findById(id);
+            if (!mongoose.isValidObjectId(id)) {
+                return res.status(400).json({
+                    mensaje: "Id inválido",
+                    status: 400,
+                });
+            }
+            if (!user) {
+                return res.status(404).json({
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                });
+            }
+            return res.status(200).json({
+                mensaje: "Usuario encontrado",
+                status: 200,
+                user,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+    }
+    
+    async agregarAlCarrito(userId, productId) {
+        try {
+            const usuario = await userModel.findById(userId);
+            if (!usuario) {
+                return { mensaje: "Usuario no encontrado", status: 404 };
+            }
+    
+            // Utiliza la función getProductById para obtener el producto por su ID
+            const producto = await productModel.findById(productId);
+            if (!producto) {
+                return { mensaje: "Producto no encontrado", status: 404 };
+            }
+    
+            // Obtener el ID del carrito del usuario
+            const cartId = usuario.cart;
+    
+            // Buscar el carrito por su ID y populando los productos
+            const cart = await cartModel.findById(cartId);
+            if (!cart) {
+                return { mensaje: "Carrito no encontrado", status: 404 };
+            }
+    
+            // Verificar si el producto ya existe en el carrito
+            const existingProductIndex = cart.products.findIndex(p => p.product.equals(producto._id));
+    
+            if (existingProductIndex !== -1) {
+                // Si el producto ya está en el carrito, incrementar la cantidad
+                cart.products[existingProductIndex].quantity += 1;
+            } else {
+                // Si el producto no está en el carrito, agregarlo con cantidad 1
+                cart.products.push({
+                    product: producto._id,
+                    quantity: 1,
+                });
+            }
+    
+            await cart.save();
+    
+            // Devuelve un objeto con información sobre la operación
+            return { mensaje: "Producto agregado al carrito correctamente", status: 200, usuario };
+        } catch (error) {
+            // Maneja los errores según tu lógica
+            console.error(error);
+            return { mensaje: "Hubo un error, inténtelo más tarde", status: 500 };
+        }
+    }
+    
+
+    async register(req, res) {
+        const { name, username, password } = req.body;
+        const user = await userModel.findOne({ username });
+        try {
+            if (user) {
+                return res.status(400).json({
+                    mensaje: "El usuario ya existe",
+                    status: 400,
+                });
+            }
+
+            const newUser = new userModel({
+                name,
+                username,
+                password: encryptPassword(password),
+            });
+
+            await newUser.save();
+            res.status(201).json({
+                mensaje: "Usuario creado exitosamente",
+                status: 201,
+                newUser,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+    }
+
+    async login(req, res) {
+        const { username, password } = req.body;
+        const user = await userModel.findOne({ username });
+        const secret = process.env.JWT_SECRET;
+        try {
+            if (!user) {
+                return res.status(404).json({
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                });
+            }
+            if (!comparePassword(password, user.password)) {
+                return res.status(400).json({
+                    mensaje: "La contraseña es inválida",
+                    status: 400,
+                });
+            }
+            const payload = {
+                sub: user._id,
+                name: user.name,
+                email: user.username,
+                name: user.name,
+                rol: user.role,
+            };
+            const token = jwt.sign(payload, secret, {
+                algorithm: process.env.JWT_ALGORITHM,
+                expiresIn: "12h",
+            });
+            return res.status(200).json({
+                mensaje: "Inicio de sesión exitoso",
+                status: 200,
+                token,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+    }
+
+    async recoverPassword(req, res) {
+        const { username } = req.body;
+        const user = await userModel.findOne({ username });
+        try {
+            if (!user) {
+                return res.status(404).json({
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                });
+            }
+            return res.status(200).json({
+                mensaje: "Se ha enviado un correo con instrucciones para recuperar la contraseña",
+                status: 200,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+    }
+    
+    async deleteUser(req, res) {
+        const { userId } = req.params;
+        try {
+            const user = await userModel.findByIdAndDelete(userId);
+    
+            if (!user) {
+                return res.status(404).json({
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                });
+            }
+    
+            return res.status(200).json({
+                mensaje: "Usuario borrado correctamente",
+                status: 200,
+                user,
+            });
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+    }
+
+    async updateUser(req, res) {
+        const { id } = req.params;
+        const { name, username, password } = req.body;
+        try {
+            if (!mongoose.isValidObjectId(id)) {
+                return res.status(400).json({
+                    mensaje: "Id inválido",
+                    status: 400,
+                });
+            }
+            if (req.body.password) {
+                const user = await userModel.findByIdAndUpdate(
+                    id,
+                    {
+                        ...req.body,
+                        name,
+                        username,
+                        password: encryptPassword(password),
+                    },
+                    { new: true }
+                );
+
+                if (!user) {
+                    return res.status(404).json({
+                        mensaje: "Usuario no encontrado",
+                        status: 404,
+                    });
+                }
+
+                return res.status(200).json({
+                    mensaje: "Usuario modificado correctamente",
+                    status: 200,
+                    user,
+                });
+            }
+            const user = await userModel.findByIdAndUpdate(
+                id,
+                {
+                    ...req.body,
+                    name,
+                    username,
+                },
+                { new: true }
+            );
+
+            if (!user) {
+                return res.status(404).json({
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                });
+            }
+
+            return res.status(200).json({
+                mensaje: "Usuario modificado correctamente",
+                status: 200,
+                user,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: "Hubo un error, inténtelo más tarde",
+                status: 500,
+            });
+        }
+
+    }
     async getUsersPaginated(page, limit) {
         try {
-            // Podemos usar el método paginate gracias a que hemos agregado el módulo mongoose-paginate-v2.
-            // También podríamos hacerlo manualmente, pero este módulo es muy cómodo y nos devuelve todos
-            // los datos necesarios en la respuesta para armar el paginado en el frontend.
-            // Por supuesto, los valores de offset y limit, pueden llegar como parámetros.
             return await userModel.paginate(
                 { gender: 'Female' },
                 { offset: (page * 50) - 50, limit: limit, lean: true }
-            )
+            );
         } catch (err) {
-            return err.message
+            return err.message;
         }
     }
 }
-
-// export const getAllUsers = async (req, res) => {
-//   const users = await User.find();
-//   try {
-//     if (!users) {
-//       return res.status(404).json({
-//         mensaje: "Usuarios no encontrados",
-//         status: 404,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       mensaje: "Usuarios encontrados",
-//       status: 200,
-//       users,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       mensaje: "Hubo un error, inténtelo más tarde",
-//       status: 500,
-//     });
-//   }
-// };
-
-// export const getUserByID = async (req, res) => {
-//   const { id } = req.params;
-//   const user = await User.findById(id);
-//   try {
-//     if (!mongoose.isValidObjectId(id)) {
-//       return res.status(400).json({
-//         mensaje: "Id inválido",
-//         status: 400,
-//       });
-//     }
-
-//     if (!user) {
-//       return res.status(404).json({
-//         mensaje: "Usuario no encontrado",
-//         status: 404,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       mensaje: "Usuario encontrado",
-//       status: 200,
-//       user
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       mensaje: "Hubo un error, inténtelo más tarde",
-//       status: 500
-//     });
-//   }
-// };
-
-//   export const register = async (req, res) => {
-//     const { name, username, password } = req.body;
-//     const user = await User.findOne({ username });
-//     try {
-//       if (user) {
-//         return res.status(400).json({
-//           mensaje: "El usuario ya existe",
-//           status: 400,
-//         });
-//       }
-  
-//       const newUser = new User({
-//         name,
-//         username,
-//         password: encryptPassword(password),
-//       });
-  
-//       await newUser.save();
-//       res.status(201).json({
-//         mensaje: "Usuario creado exitosamente",
-//         status: 201,
-//         newUser,
-//       });
-//     } catch (error) {
-//       return res.status(500).json({
-//         mensaje: "Hubo un error, inténtelo más tarde",
-//         status: 500,
-//       });
-//     }
-//   };
-
-//   export const login = async (req, res) => {
-//     const { username, password } = req.body;
-//     const user = await User.findOne({ username });
-//     const secret = process.env.JWT_SECRET;
-//     try {
-//       if (!user) {
-//         return res.status(404).json({
-//           mensaje: "Usuario no encontrado",
-//           status: 404,
-//         });
-//       }
-//       if (!comparePassword(password, user.password)) {
-//         return res.status(400).json({
-//           mensaje: "La contraseña es invalida",
-//           status: 400,
-//         });
-//       }
-//       const payload = {
-//         sub: user._id,
-//         email: user.username,
-//         name: user.name,
-//         rol: user.rol
-//       };
-//       const token = jwt.sign(payload, secret, {
-//         algorithm: process.env.JWT_ALGORITHM,
-//         expiresIn: "12h"
-//       });
-//       return res.status(200).json({
-//         mensaje: "Inicio de sesión exitoso",
-//         status: 200,
-//         token
-//       });
-//     } catch (error) {
-//       return res.status(500).json({
-//         mensaje: "Hubo un error, inténtelo más tarde",
-//         status: 500
-//       });
-//     }
-//   };
-
-//   export const recoverPassword = async (req, res) => {
-//     const { username } = req.body;
-//     const user = await User.findOne({ username });
-  
-//     try {
-//       if (!user) {
-//         return res.status(404).json({
-//           mensaje: "Usuario no encontrado",
-//           status: 404,
-//         });
-//       }
-//       return res.status(200).json({
-//         mensaje: "Se ha enviado un correo con instrucciones para recuperar la contraseña",
-//         status: 200,
-//       });
-//     } catch (error) {
-//       return res.status(500).json({
-//         mensaje: "Hubo un error, inténtelo más tarde",
-//         status: 500,
-//       });
-//     }
-//   };
-
-// export const deleteUser = async (req, res) => {
-//   const { id } = req.params;
-//   const user = await User.findByIdAndDelete(id);
-//   try {
-//     if (!mongoose.isValidObjectId(id)) {
-//       return res.status(400).json({
-//         mensaje: "Id inválido",
-//         status: 400,
-//       });
-//     }
-//     if (!user) {
-//       return res.status(404).json({
-//         mensaje: "Usuario no encontrado",
-//         status: 404,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       mensaje: "Usuario borrado correctamente",
-//       status: 200,
-//       user,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       mensaje: "Hubo un error, inténtelo más tarde",
-//       status: 500,
-//     });
-//   }
-// };
-
-
-// export const updateUser = async (req, res) => {
-//   const { id } = req.params;
-//   const { name, username, password } = req.body;
-//   try {
-//     if (!mongoose.isValidObjectId(id)) {
-//       return res.status(400).json({
-//         mensaje: "Id inválido",
-//         status: 400,
-//       });
-//     }
-//     if(req.body.password){
-//     const user = await User.findByIdAndUpdate(
-//       id,
-//       {
-//         ...req.body,
-//         name,
-//         username,
-//         password: encryptPassword(password)
-//       },
-//       { new: true }
-//     );
-
-//     if (!user) {
-//       return res.status(404).json({
-//         mensaje: "Usuario no encontrado",
-//         status: 404
-//       });
-//     }
-
-//     return res.status(200).json({
-//       mensaje: "Usuario modificado correctamente",
-//       status: 200,
-//       user
-//     });
-//   }
-//   const user = await User.findByIdAndUpdate(
-//     id,
-//     {
-//       ...req.body,
-//       name,
-//       username
-//     },
-//     { new: true }
-//   );
-
-//   if (!user) {
-//     return res.status(404).json({
-//       mensaje: "Usuario no encontrado",
-//       status: 404
-//     });
-//   }
-
-//   return res.status(200).json({
-//     mensaje: "Usuario modificado correctamente",
-//     status: 200,
-//     user
-//   });
-//   } catch (error) {
-//     return res.status(500).json({
-//       mensaje: "Hubo un error, inténtelo más tarde",
-//       status: 500
-//     });
-//   }
-// };
-
-
-
-
-

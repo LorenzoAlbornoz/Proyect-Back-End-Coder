@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import mongoosePaginate from 'mongoose-paginate-v2'
+import Cart from './cartSchema.js'
 
 mongoose.pluralize(null)
 
@@ -11,16 +12,24 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    username:{
+    email:{
         type: String,
         required: true,
         trim: true
+    },
+    age: {
+        type: Number, 
+        trim: true,
     },
     password:{
         type: String,
         trim: [true, "Tiene espacios"]
     },
-    rol: {
+    cart: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: Cart
+    },
+    role: {
         type:String,
         default: "user",
         enum: ["user", "admin"]

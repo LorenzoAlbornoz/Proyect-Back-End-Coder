@@ -4,6 +4,7 @@ import express from 'express';
 import handlebars from 'express-handlebars'
 import cors from "cors"
 import cloudinary from 'cloudinary'
+import cookieParser from 'cookie-parser';
 import session from 'express-session'
 import FileStore from 'session-file-store'
 import MongoStore from 'connect-mongo'
@@ -16,7 +17,7 @@ import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
 import viewsRouter from './routes/views.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
-// import usersRouter from './routes/users.routes.js';
+import usersRouter from './routes/users.routes.js';
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.use(cors())
 app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser('secretKeyAbc123'))
+    
 
 const fileStorage = FileStore(session)
 app.use(session({
@@ -57,7 +60,9 @@ app.use(process.env.API, categoryRouter)
 app.use(process.env.API, productsRouter);
 app.use('/', viewsRouter)
 app.use(process.env.API, sessionsRouter)
-// app.use(process.env.API, usersRouter);
+app.use(process.env.API, usersRouter);
+
+app.use('/static', express.static(`${__dirname}/public`))
 
 const port = process.env.PORT
 

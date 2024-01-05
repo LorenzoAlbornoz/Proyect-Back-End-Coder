@@ -1,13 +1,15 @@
 import cartModel from '../models/cartSchema.js'
+import userModel from '../models/userSchema.js';
 
 export class CartController {
     constructor() {
     }
 
-    async createCart() {
+    async createCart(user) {
         try {
             const newCart = {
               products: [],
+              user: user._id,
             };
             const createdCart = await cartModel.create(newCart);
             return createdCart;
@@ -16,14 +18,26 @@ export class CartController {
           }
     }
 
-    async getCartById(id) {
-        try {
-            const cart = await cartModel.findById(id).populate('products.product')
-            return cart === null ? 'No se encuentra el carrito' : cart
-        } catch (err) {
-            return err.message
-        }
-    }
+    async  getCartById(userId) {
+      try {
+          // Obtener el usuario por su ID
+          const user = await userModel.findById(userId);
+  
+          if (!user) {
+              return 'No se encuentra el usuario';
+          }
+  
+          // Obtener el ID del carrito del usuario
+          const cartId = user.cart;
+  
+          // Buscar el carrito por su ID y populando los productos
+          const cart = await cartModel.findById(cartId).populate('products.product');
+  
+          return cart === null ? 'No se encuentra el carrito' : cart;
+      } catch (err) {
+          return err.message;
+      }
+  }
 
     async addProductToCart(cartId, productId) {
       try {
@@ -51,6 +65,7 @@ export class CartController {
           const updatedCart = await cart.save();
           return updatedCart;
         } catch (error) {
+          console.error('Error en addProductToCart:', error);
           throw error;
         }
       }
@@ -109,5 +124,22 @@ export class CartController {
             return err.message
         }
     }
-}
 
+
+async getCartQuantity(cartId) {
+    try {
+      const cart = await cartModel.findById(cartId);
+      
+      if (cart) {
+        // Sumar las cantidades de todos los productos en el carrito
+        const totalQuantity = cart.products.reduce((total, product) => total + product.quantity, 0);
+        return totalQuantity;
+      } else {
+        return null; // Cart no encontrado
+      }
+    } catch (error) {
+      console.error(error);
+      throw error; // Puedes manejar este error de la manera que consideres más apropiada
+    }
+  }
+}

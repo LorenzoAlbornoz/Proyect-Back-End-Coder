@@ -1,14 +1,16 @@
 import { Router } from 'express'
 import passport from 'passport';
-
 import User from "../models/userSchema.js"
+import Cart from "../models/cartSchema.js"
 import { UserController } from '../controllers/userControllers.js';
-import { encryptPassword, comparePassword,  generateToken } from '../utils.js';
+import { CartController } from '../controllers/cartControllers.js';
+import { encryptPassword, comparePassword, generateToken, passportCall} from '../utils.js';
 import initPassport from '../config/passport.config.js';
 
 initPassport()
 const router = Router();
 const userController = new UserController();
+const cartController = new CartController();
 
 
 // Creamos un pequeño middleware para una autorización básica
@@ -18,71 +20,140 @@ const userController = new UserController();
 // devolvemos un error 403 (Forbidden), no se puede acceder al recurso.
 // Si ni siquiera se dispone de req.session.user, directamente devolvemos error
 // de no autorizado.
-const auth = (req, res, next) => {
+const authenticationMid = (req, res, next) => {
     try {
-        if (req.session.rol === 'admin') {
-            next();
+        if (req.session.user) {
+            if (req.session.user.admin === true) {
+                next()
+            } else {
+                res.status(403).send({ status: 'ERR', data: 'Usuario no admin' })
+            }
         } else {
-            res.status(403).send({ status: 'ERR', data: 'Usuario no admin' });
-        }
+            res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
+        }   
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message });
+        res.status(500).send({ status: 'ERR', data: err.message })
     }
-};
+}
+
+const authorizationMid = role => {
+    return async (req, res, next) => {
+        if (!req.user) return res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
+        if (req.user.role !== role) return res.status(403).send({ status: 'ERR', data: 'Sin permisos suficientes' })
+        next();
+    }
+}
+
+// Nuevo middleware para manejo de políticas (roles)
+// que nos permite indicar en el endpoint un array de roles válidos, no solo uno.
+const handlePolicies = policies => {
+    return async (req, res, next) => {
+        if (!req.user) return res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
+
+        // Normalizamos todo a mayúsculas para comparar efectivamente
+        const userRole = req.user.role.toUpperCase();
+        policies.forEach((policy, index) => policies[index] = policies[index].toUpperCase());
+
+        if (policies.includes('PUBLIC')) return next();
+        if (policies.includes(userRole)) return next();
+        res.status(403).send({ status: 'ERR', data: 'Sin permisos suficientes' });
+    }
+}
 
 
 router.get('/logout', async (req, res) => {
     try {
+        res.clearCookie('codertoken');
+
         // req.session.destroy nos permite destruir la sesión
         // De esta forma, en la próxima solicitud desde ese mismo navegador, se iniciará
         // desde cero, creando una nueva sesión y volviendo a almacenar los datos deseados.
         req.session.destroy((err) => {
             if (err) {
-                res.status(500).send({ status: 'ERR', data: err.message });
+                res.status(500).send({ status: 'ERR', data: err.message })
             } else {
-                // Redirige al usuario a la página de inicio de sesión después de cerrar la sesión
-                res.redirect('/login');
+                // El endpoint puede retornar el mensaje de error, o directamente
+                // redireccionar a login o una página general.
+                // res.status(200).send({ status: 'OK', data: 'Sesión finalizada' })
+                res.redirect('/login')
             }
-        });
+        })
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message });
+        res.status(500).send({ status: 'ERR', data: err.message })
     }
-});
+})
 
 // Este es un endpoint "privado", solo visible para admin.
 // Podemos ver que el contenido no realiza ninguna verificación, ya que la misma se hace
 // inyectando el middleware auth en la cadena (ver definición auth arriba).
 // Si todo va bien en auth, se llamará a next() y se continuará hasta aquí, caso contrario
 // la misma rutina en auth() cortará y retornará la respuesta con el error correspondiente.
-router.get('/admin', auth, async (req, res) => {
+
+router.get('/admin', authenticationMid, async (req, res) => {
     try {
-        // Obtiene la lista de usuarios utilizando el controlador
-        const users = await userController.getUsers();
-        console.log('Users:', users);
-        // Renderiza la vista 'admin' y pasa los datos de usuarios
-        res.render('admin', {
-          title: 'Listado de Usuarios',
-          data: users
-        });
+        res.status(200).send({ status: 'OK', data: 'Estos son los datos privados' })
     } catch (err) {
-        res.status(500).json({ status: 'ERR', data: err.message });
+        res.status(500).send({ status: 'ERR', data: err.message })
     }
-});
+})
+
+router.get('/failregister', async (req, res) => {
+    res.status(400).send({ status: 'ERR', data: 'El email ya existe o faltan datos obligatorios' })
+})
+
+router.get('/failrestore', async (req, res) => {
+    res.status(400).send({ status: 'ERR', data: 'El email no existe o faltan datos obligatorios' })
+})
 
 router.get('/github', passport.authenticate('githubAuth', { scope: ['user:email'] }), async (req, res) => {
 });
 
 router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
-    req.session.username = req.user.username; 
-    res.redirect('/products-views');
-});
+    try {
+        const { _id, name, email, role } = req.user;
+
+        // Verifica si el correo electrónico ya está asociado a un usuario existente
+        let user = await User.findOne({ email });
+
+        // Crea un nuevo carrito y vincúlalo al usuario
+        const newCart = await cartController.createCart(user);
+
+        // Asigna la referencia del carrito al campo 'cart' del usuario
+        user.cart = newCart._id;
+
+        // Guarda nuevamente el usuario con la referencia al carrito
+        await user.save();
+
+        const token = generateToken({
+            sub: _id,
+            name,
+            email,
+            rol: role
+        }, '1h');
+
+        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
+        res.cookie('codertoken', token, { maxAge: 60 * 60 * 1000, httpOnly: true });
+
+        // Redirige al usuario a la vista de productos o cualquier otra página deseada
+        res.redirect('/products-views');
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        mensaje: 'Hubo un error, inténtelo más tarde',
+        status: 500,
+        error: error.message,
+      });
+    }
+  });
+  
 
 // Nuestro primer endpoint de login!, básico por el momento, con algunas
 // validacione "hardcodeadas", pero nos permite comenzar a entender los conceptos.router.post('/login', async (req, res) => {
     router.post('/login', async (req, res) => {
         try {
-            const { username, password } = req.body;
-            const user = await User.findOne({ username });
+            const { email, password } = req.body;
+            
+            const user = await User.findOne({ email });
     
             if (!user) {
                 return res.status(404).json({
@@ -90,37 +161,38 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
                     status: 404,
                 });
             }
-            if (!comparePassword(password, user.password)) {
+    
+            const isPasswordValid = comparePassword(password, user.password);
+            if (!isPasswordValid) {
                 return res.status(400).json({
-                  mensaje: "La contraseña es invalida",
-                  status: 400,
+                    mensaje: "La contraseña es inválida",
+                    status: 400,
                 });
-              }
-    
-            req.session.username = username;
-            req.session.rol = user.rol;
-    
-            if (user.rol === 'admin') {
-                // Si el usuario es admin, redirige a la página de admin
-                res.redirect('/api/admin');
-            } else {
-                // Si el usuario es user, redirige a la lista de productos
-                res.redirect('/products-views');
             }
+    
+            const access_token = generateToken({ 
+                sub: user._id,
+                name: user.name,
+                email: user.email,
+                name: user.name,
+                rol: user.role
+            }, '1h')
+            res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
+            res.redirect('/products-views');
         } catch (error) {
-            console.log(error);
-            return res.status(500).json({
+            console.error(error);
+            res.status(500).json({
                 mensaje: "Hubo un error, inténtelo más tarde",
                 status: 500,
+                error: error.message, 
             });
         }
     });
-
     
 router.post('/register', async (req, res) => {
     try {
-        const { name, username, password } = req.body;
-        const user = await User.findOne({ username });
+        const { name, email, age, password } = req.body;
+        const user = await User.findOne({ email });
 
         if (user) {
             return res.status(400).json({
@@ -131,10 +203,20 @@ router.post('/register', async (req, res) => {
 
         const newUser = new User({
             name,
-            username,
+            email,
+            age,
             password: encryptPassword(password)
         });
 
+        await newUser.save();
+
+        // Crea un nuevo carrito y lo vincula al usuario recién creado
+        const newCart = await cartController.createCart(newUser);
+
+        // Asigna la referencia del carrito al campo 'cart' del usuario
+        newUser.cart = newCart._id;
+
+        // Guarda nuevamente el usuario con la referencia al carrito
         await newUser.save();
 
         // Redirigir al usuario a la página de inicio de sesión (login) después de un registro exitoso
@@ -150,38 +232,13 @@ router.post('/register', async (req, res) => {
     }
 });
 
-    // router.post('/login', async (req, res) => {
-    //     try {
-    //         const { username, password } = req.body;
-    
-    //         // Buscar al usuario por el nombre de usuario
-    //         const user = await User.findOne({ username });
-    
-    //         if (user) {
-    //             // Si el usuario existe, comparar la contraseña
-    //             if (comparePassword(password, user.password)) {
-    //                 // Utilizando tokens JWT
-    //                 const access_token = generateToken({ username: username, admin: true }, '1h');
-    //                 res.redirect(`/profilejwt?access_token=${access_token}`);
-    //             } else {
-    //                 res.status(401).send({ status: 'ERR', data: 'Datos no válidos' });
-    //             }
-    //         } else {
-    //             res.status(401).send({ status: 'ERR', data: 'Datos no válidos' });
-    //         }
-    //     } catch (err) {
-    //         res.status(500).send({ status: 'ERR', data: err.message });
-    //     }
-    // });
-    
-    
-    // router.post('/register', passport.authenticate('registerAuth', { failureRedirect: '/api/failregister' }), async (req, res) => {
-    //     try {
-    //         res.status(200).send({ status: 'OK', data: 'Usuario registrado' })
-    //     } catch (err) {
-    //         res.status(500).send({ status: 'ERR', data: err.message })
-    //     }
-    // })
+    // router.get('/current', passport.authenticate('jwtAuth', { session: false }), async (req, res) => {
+// La función passportCall nos permite una mejor intercepción de errores (ver utils.js)
+// Este endpoint muestra cómo podemos encadenar distintos middlewares en el proceso,
+// aquí primero autenticamos y luego autorizamos.
+router.get('/current', passportCall('jwtAuth', { session: false }), handlePolicies(['regular', 'premium', 'admin']), async (req, res) => {
+    res.status(200).send({ status: 'OK', data: req.user })
+})
 
 router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
     try {
@@ -192,4 +249,6 @@ router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: 
 })
 
 export default router
+
+
 

@@ -25,9 +25,9 @@ export class ProductController {
 
     }
 
-    async getProductById(id) {
+    async getProductById(productId) {
         try {
-            const product = await productModel.findById(id)
+            const product = await productModel.findById(productId)
             return product === null ? 'No se encuentra el producto' : product
         } catch (err) {
             return err.message

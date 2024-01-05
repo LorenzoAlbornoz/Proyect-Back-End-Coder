@@ -16,16 +16,17 @@
 import passport from 'passport'
 import LocalStrategy from 'passport-local'
 import GithubStrategy from 'passport-github2'
+import jwt from 'passport-jwt'
 import userModel from '../models/userSchema.js'
 import { encryptPassword, comparePassword } from '../utils.js';
 
 const initPassport = () => {
     // Función utilizada por la estrategia registerAuth
-    const verifyRegistration = async (req, done) => {
+    const verifyRegistration = async (req, username, password, done) => {
         try {
-            const { name, username, password } = req.body
+            const { name, email, age } = req.body
 
-            if (!name || !username || !password) {
+            if (!name || !email || !age) {
                 return done('Se requiere nombre, usuario y contraseña en el body', false)
             }
 
@@ -37,8 +38,9 @@ const initPassport = () => {
 
             const newUser = {
                 name,
-                username,
-                password: encryptPassword(password)
+                email,
+                age,
+                password: createHash(password)
             }
 
             const process = await userModel.create(newUser)
@@ -50,10 +52,10 @@ const initPassport = () => {
     }
 
     // Función utilizada por la estrategia restoreAuth
-    const verifyRestoration = async (req, done) => {
+    const verifyRestoration = async (req, username, password, done) => {
         try {
-            if (name.length === 0 || username.length === 0 || password.length === 0) {
-                return done('Se requiere email y pass en el body', false)
+            if ( username.length === 0 || password.length === 0) {
+                return done('Se requiere email y password en el body', false)
             }
 
             const user = await userModel.findOne({ email: username })
@@ -70,19 +72,20 @@ const initPassport = () => {
             return done(`Error passport local: ${err.message}`)
         }
     }
+
     const verifyGithub = async (accessToken, refreshToken, profile, done) => {
         try {
             const user = await userModel.findOne({ username: profile.username });
-    
+
             if (!user) {
                 const newUser = {
                     name: profile.displayName,
-                    username: profile.username,
-                    password: '', 
+                    email: profile.username,
+                    password: '',
                 };
-    
+
                 const process = await userModel.create(newUser);
-    
+
                 return done(null, process);
             } else {
                 done(null, user);
@@ -91,6 +94,25 @@ const initPassport = () => {
             return done(`Error passport Github: ${err.message}`);
         }
     };
+
+    const verifyJwt = async (payload, done) => {
+        try {
+            return done (null, payload);
+        } catch (err) {
+            return done(err);
+        }
+    }
+
+    /**
+     * Passport no opera con las cookies de forma directa, por lo cual creamos
+     * una función auxiliar que extrae y retorna la cookie del token si está disponible
+     */
+    const cookieExtractor = (req) => {
+        let token = null;
+        if (req && req.cookies) token = req.cookies['codertoken'];
+        return token;
+    }
+    
     // Creamos estrategia local de autenticación para registro
     passport.use('registerAuth', new LocalStrategy({
         passReqToCallback: true,
@@ -105,12 +127,18 @@ const initPassport = () => {
         passwordField: 'password'
     }, verifyRestoration))
 
-        // Creamos estrategia para autenticación externa con Github
-        passport.use('githubAuth', new GithubStrategy({
-            clientID: 'Iv1.385fcec6a2d99a29',
-            clientSecret: 'a5a083af231a247b2b5467d0b650db8078a53445',
-            callbackURL: 'http://localhost:8080/api/githubcallback'
-        }, verifyGithub))    
+    // Creamos estrategia para autenticación externa con Github
+    passport.use('githubAuth', new GithubStrategy({
+        clientID: 'Iv1.385fcec6a2d99a29',
+        clientSecret: 'a5a083af231a247b2b5467d0b650db8078a53445',
+        callbackURL: 'http://localhost:8080/api/githubcallback'
+    }, verifyGithub))
+
+    // Estrategia para autenticación con JWT
+    passport.use('jwtAuth', new jwt.Strategy({
+        jwtFromRequest: jwt.ExtractJwt.fromExtractors([cookieExtractor]),
+        secretOrKey: 'Coder55605_Key_Jwt'
+    }, verifyJwt))
 
     // Métodos "helpers" de passport para manejo de datos de sesión
     // Son de uso interno de passport, normalmente no tendremos necesidad de tocarlos.
