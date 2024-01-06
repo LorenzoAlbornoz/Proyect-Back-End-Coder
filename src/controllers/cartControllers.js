@@ -18,57 +18,69 @@ export class CartController {
           }
     }
 
-    async  getCartById(userId) {
+    async getCartById(userId) {
       try {
-          // Obtener el usuario por su ID
-          const user = await userModel.findById(userId);
-  
-          if (!user) {
-              return 'No se encuentra el usuario';
-          }
-  
-          // Obtener el ID del carrito del usuario
-          const cartId = user.cart;
-  
-          // Buscar el carrito por su ID y populando los productos
-          const cart = await cartModel.findById(cartId).populate('products.product');
-  
-          return cart === null ? 'No se encuentra el carrito' : cart;
-      } catch (err) {
-          return err.message;
-      }
-  }
-
-    async addProductToCart(cartId, productId) {
-      try {
-        const cart = await cartModel.findById(cartId);
-
+        // Obtener el usuario por su ID
+        const user = await userModel.findById(userId);
+    
+        if (!user) {
+          return 'No se encuentra el usuario';
+        }
+    
+        // Obtener el ID del carrito del usuario
+        const cartId = user.cart;
+    
+        // Buscar el carrito por su ID y populando los productos
+        const cart = await cartModel.findById(cartId).populate('products.product');
+    
         if (!cart) {
-            return null; // El carrito no existe
+          return 'No se encuentra el carrito';
         }
-
-        // Verificar si el producto ya está en el carrito
-        const existingProduct = cart.products.find(product => product.product.toString() === productId);
-
-        if (existingProduct) {
-            // Si el producto ya está en el carrito, aumentar la cantidad
-            existingProduct.quantity += 1;
-        } else {
-            // Si el producto no está en el carrito, agregarlo con cantidad 1
-            const productToAdd = {
-                product: productId,
-                quantity: 1,
-            };
-
-            cart.products.push(productToAdd);
-        }
-          const updatedCart = await cart.save();
-          return updatedCart;
-        } catch (error) {
-          console.error('Error en addProductToCart:', error);
-          throw error;
-        }
+    
+        // Calcular el total sumando el precio de cada producto multiplicado por su cantidad
+        const total = cart.products.reduce((acc, product) => {
+          return acc + (product.product.price * product.quantity);
+        }, 0);
+    
+        // Agregar la propiedad 'total' al objeto cart
+        cart.total = total;
+    
+        return cart;
+      } catch (err) {
+        return err.message;
       }
+    }
+
+  async addProductToCart(cartId, productId) {
+    try {
+      const cart = await cartModel.findById(cartId);
+
+      if (!cart) {
+          return null; // El carrito no existe
+      }
+
+      // Verificar si el producto ya está en el carrito
+      const existingProduct = cart.products.find(product => product.product.toString() === productId);
+
+      if (existingProduct) {
+          // Si el producto ya está en el carrito, aumentar la cantidad
+          existingProduct.quantity += 1;
+      } else {
+          // Si el producto no está en el carrito, agregarlo con cantidad 1
+          const productToAdd = {
+              product: productId,
+              quantity: 1,
+          };
+
+          cart.products.push(productToAdd);
+      }
+        const updatedCart = await cart.save();
+        return updatedCart;
+      } catch (error) {
+        console.error('Error en addProductToCart:', error);
+        throw error;
+      }
+    }
 
       async editProductQuantity(cartId, productId, newQuantity) {
         try {

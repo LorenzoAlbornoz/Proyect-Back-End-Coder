@@ -124,15 +124,17 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
         // Guarda nuevamente el usuario con la referencia al carrito
         await user.save();
 
-        const token = generateToken({
-            sub: _id,
-            name,
-            email,
-            rol: role
-        }, '1h');
+       const access_token = generateToken({ 
+                sub: user.id,
+                name: user.name,
+                email: user.email,
+                name: user.name,
+                rol: user.role,
+                cart: user.cart
+            }, '1h')
 
         // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', token, { maxAge: 60 * 60 * 1000, httpOnly: true });
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
 
         // Redirige al usuario a la vista de productos o cualquier otra página deseada
         res.redirect('/products-views');
@@ -171,11 +173,12 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
             }
     
             const access_token = generateToken({ 
-                sub: user._id,
+                sub: user.id,
                 name: user.name,
                 email: user.email,
                 name: user.name,
-                rol: user.role
+                rol: user.role,
+                cart: user.cart
             }, '1h')
             res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
             res.redirect('/products-views');

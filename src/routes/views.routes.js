@@ -11,7 +11,6 @@ const productController = new ProductController();
 const cartController = new CartController();
 const userController = new UserController();
 
-
 router.get('/products-views', async (req, res) => {
   try {
       const token = req.cookies.codertoken;
@@ -21,7 +20,7 @@ router.get('/products-views', async (req, res) => {
           const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 
           // Puedes acceder a la información del usuario desde el token decodificado
-          const { sub: userId, name } = decoded;
+          const { sub: userId, name, cart } = decoded;
 
           const { limit = 5, page = 1, sort, category } = req.query;
           const parsedLimit = parseInt(limit, 5);
@@ -50,6 +49,7 @@ router.get('/products-views', async (req, res) => {
               title: 'Listado de Productos',
               userId: userId,
               name: name,
+              cart:cart,
               products: result.docs,
               totalPages: result.totalPages,
               prevPage: result.hasPrevPage ? result.prevPage : null,
@@ -69,21 +69,22 @@ router.get('/products-views', async (req, res) => {
   }
 });
 
-router.get('/cart/:cartId', async (req, res) => {
+router.get('/cart/:cid', async (req, res) => {
   try {
-      const cartId = req.params.cartId;
-      const cart = await cartModel.findById(cartId).populate('products.product');
+    const cartId = req.params.cid;
+    const cart = await cartController.getCartById(cartId);
 
-      if (cart) {
-          res.render('cart', { title: 'Carrito de Compras', cart });
-      } else {
-          res.status(404).render('error', { message: 'Carrito no encontrado' });
-      }
+    if (cart) {
+      res.render('cart', { title: 'Carrito de Compras', cart });
+    } else {
+      res.status(404).render('error', { message: 'Carrito no encontrado' });
+    }
   } catch (error) {
-      console.error(error);
-      res.status(500).render('error', { message: 'Error en el servidor' });
+    console.error(error);
+    res.status(500).render('error', { message: 'Error en el servidor' });
   }
 });
+
 
 router.post('/cart/:cartId/product/:productId', async (req, res) => {
     const cartId = req.params.cartId;

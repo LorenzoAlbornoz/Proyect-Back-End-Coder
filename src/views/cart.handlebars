@@ -14,9 +14,10 @@
 
 <body>
  <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc" class="btn btn-info" style="margin-top: 10px;">Seguir Comprando</a>
+  {{#with cart}}
   <h1>Carrito de Compras</h1>
+  <p>Total del Carrito: ${{total}}</p>
   <div class="cart-products">
-    {{#with cart}}
     {{#each products}}
     <div class="cart-product">
       <h2>{{this.product.title}}</h2>
@@ -25,10 +26,12 @@
       <label for="quantity">Nueva Cantidad:</label>
       <input type="number" name="quantity" value="{{this.quantity}}" min="1" id="quantity-{{this._id}}">
       <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')" class="btn btn-warning">Actualizar Cantidad</button>
-      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')" class="btn btn-danger">Eliminar del carrito</button>
+      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')"
+        class="btn btn-danger">Eliminar del carrito</button>
     </div>
     {{/each}}
-    {{/with}}
+  </div>
+  {{/with}}
   </div>
 
   <!-- Agrega la referencia a Axios -->

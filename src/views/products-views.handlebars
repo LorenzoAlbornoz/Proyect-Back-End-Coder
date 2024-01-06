@@ -9,13 +9,13 @@
       <button type="submit" class="btn btn-success" style="margin-bottom: 10px;">Cerrar Sesión</button>
     </form>
     <!-- Icono de carrito y cantidad -->
-    {{#if cart}}
-    <form id="cartForm" action="/cart/{{cart}}" method="get">
-      <button type="submit" class="btn btn-info" style="margin-bottom: 10px; margin-left: 10px;">
+{{#if cart}}
+<form id="cartForm" action="/cart/{{cart}}" method="get">
+    <button type="submit" class="btn btn-info" style="margin-bottom: 10px; margin-left: 10px;">
         <i class="fas fa-shopping-cart"></i> <span id="cartQuantity">0</span>
-      </button>
-    </form>
-    {{/if}}
+    </button>
+</form>
+{{/if}}
   </div>
 </div>
 
@@ -105,7 +105,7 @@
   }
 </script>
 
-{{!-- <script>
+<script>
   // Función para actualizar la cantidad del carrito
   function updateCartQuantity() {
     console.log('Antes de hacer la solicitud');
@@ -126,7 +126,7 @@
   // Llamar a la función al cargar la página
   updateCartQuantity();
 
-</script> --}}
+</script>
 
 <!-- Script para manejar las operaciones con eventos de clic -->
 <script>
