@@ -11,51 +11,58 @@ const productController = new ProductController();
 const cartController = new CartController();
 const userController = new UserController();
 
+
 router.get('/products-views', async (req, res) => {
   try {
-    if (req.session.username) {
-      const { limit = 5, page = 1, sort, category } = req.query;
+      const token = req.cookies.codertoken;
 
-      const parsedLimit = parseInt(limit, 5);
-      const effectiveLimit = isNaN(parsedLimit) ? 5 : parsedLimit;
+      if (token) {
+          // Verificar y decodificar el token JWT
+          const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 
-      let filter = {};
-      let sortOption = {};
+          // Puedes acceder a la información del usuario desde el token decodificado
+          const { sub: userId, name } = decoded;
 
-      // Aplica filtro por categoría si se proporciona el parámetro query
-      if (category) {
-          filter = { $or: [{ category: category }] };
+          const { limit = 5, page = 1, sort, category } = req.query;
+          const parsedLimit = parseInt(limit, 5);
+          const effectiveLimit = isNaN(parsedLimit) ? 5 : parsedLimit;
+
+          let filter = {};
+          let sortOption = {};
+
+          if (category) {
+              filter = { $or: [{ category: category }] };
+          }
+
+          if (sort) {
+              sortOption = { price: sort === 'asc' ? 1 : -1 };
+          }
+
+          const options = {
+              page: parseInt(page),
+              limit: effectiveLimit,
+              sort: sortOption,
+          };
+          
+          const result = await productController.paginate(filter, options);
+          console.log('UserId:', userId)
+          res.render('products-views', {
+              title: 'Listado de Productos',
+              userId: userId,
+              name: name,
+              products: result.docs,
+              totalPages: result.totalPages,
+              prevPage: result.hasPrevPage ? result.prevPage : null,
+              nextPage: result.hasNextPage ? result.nextPage : null,
+              page: result.page,
+              hasPrevPage: result.hasPrevPage,
+              hasNextPage: result.hasNextPage,
+              prevLink: result.hasPrevPage ? `/products-views?limit=${limit}&page=${result.prevPage}&sort=${sort}&category=${category}` : null,
+              nextLink: result.hasNextPage ? `/products-views?limit=${limit}&page=${result.nextPage}&sort=${sort}&category=${category}` : null,
+          });
+      } else {
+          res.redirect('/login');
       }
-
-      // Aplica ordenamiento por precio si se proporciona el parámetro sort
-      if (sort) {
-          sortOption = { price: sort === 'asc' ? 1 : -1 };
-      }
-    
-      // Utiliza el método paginate de Mongoose para obtener la paginación
-      const options = {
-          page: parseInt(page),
-          limit: effectiveLimit,
-          sort: sortOption,
-      };
-      console.log('UserID en sesión:', req.session.user);
-      const result = await productController.paginate(filter, options);
-      res.render('products', {
-          title: 'Listado de Productos',
-
-          products: result.docs,
-          totalPages: result.totalPages,
-          prevPage: result.hasPrevPage ? result.prevPage : null,
-          nextPage: result.hasNextPage ? result.nextPage : null,
-          page: result.page,
-          hasPrevPage: result.hasPrevPage,
-          hasNextPage: result.hasNextPage,
-          prevLink: result.hasPrevPage ? `/products-views?limit=${limit}&page=${result.prevPage}&sort=${sort}&category=${category}` : null,
-          nextLink: result.hasNextPage ? `/products-views?limit=${limit}&page=${result.nextPage}&sort=${sort}&category=${category}` : null,
-      });
-    } else {
-      res.redirect('/login');
-    }
   } catch (error) {
       console.error(error);
       res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
@@ -162,7 +169,7 @@ router.get('/login', async (req, res) => {
 
       if (token) {
           // Verificar y decodificar el token JWT
-          const decoded = await jwt.verify(token, process.env.PRIVATE_KEY);
+          const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 
           // Puedes acceder a la información del usuario desde el token decodificado
           const { email } = decoded;
