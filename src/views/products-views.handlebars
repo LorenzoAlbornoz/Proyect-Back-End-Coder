@@ -9,13 +9,13 @@
       <button type="submit" class="btn btn-success" style="margin-bottom: 10px;">Cerrar Sesión</button>
     </form>
     <!-- Icono de carrito y cantidad -->
-{{#if cart}}
-<form id="cartForm" action="/cart/{{cart}}" method="get">
-    <button type="submit" class="btn btn-info" style="margin-bottom: 10px; margin-left: 10px;">
-        <i class="fas fa-shopping-cart"></i> <span id="cartQuantity">0</span>
-    </button>
-</form>
-{{/if}}
+    {{#if cart}}
+    <form id="cartForm" action="/cart/{{cart}}" method="get">
+      <button type="submit" class="btn btn-info" style="margin-bottom: 10px; margin-left: 10px;">
+        <i class="fas fa-shopping-cart"></i> <span id="cartQuantity">{{cart.totalQuantity}}</span>
+      </button>
+    </form>
+    {{/if}}
   </div>
 </div>
 
@@ -35,9 +35,13 @@
         {{/if}}
         <p class="card-text">Código: {{this.code}}</p>
         <p class="card-text">Stock: {{this.stock}}</p>
-        <!-- Botón "Agregar al Carrito" con evento de clic -->
-        <button type="button" onclick=" addToCart('{{userId}}', '{{this._id}}')" class="btn btn-primary">Agregar al
-          Carrito</button>
+        <!-- Formulario para agregar al carrito -->
+        <form id="addToCartForm_{{this._id}}" action="/cart/{{cart}}/product/{{this._id}}" method="post">
+          <button type="submit" class="btn btn-primary addToCartBtn" data-product-id="{{this._id}}">
+            <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+          </button>
+
+        </form>
       </div>
     </div>
   </div>
@@ -78,23 +82,27 @@
 </nav>
 
 <head>
-  <!-- Otros elementos del head -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<!-- Agrega la referencia a SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Agrega la referencia a Axios -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 
 <script>
-  // Manejar la redirección al carrito con JavaScript
-  document.getElementById('cartForm').addEventListener('submit', function (event) {
-    event.preventDefault(); // Evitar que el formulario se envíe directamente
-    redirectToCart('{{userId}}');
-  });
+document.addEventListener('DOMContentLoaded', function () {
+    // Obtener el ID del carrito del formulario
+    const cartId = document.getElementById('cartForm').getAttribute('action').split('/').pop();
+
+    // Actualizar la cantidad cuando se carga la página
+    updateCartQuantity(cartId);
+
+    // Agregar el evento de clic al formulario del carrito
+    document.getElementById('cartForm').addEventListener('submit', function (event) {
+      event.preventDefault(); // Evitar que el formulario se envíe directamente
+      redirectToCart('{{userId}}');
+    });
 
   function redirectToCart(userId) {
     // Realizar una acción adicional si es necesario antes de redirigir
@@ -103,63 +111,56 @@
     // Redirigir al carrito
     window.location.href = `http://localhost:8080/cart/${userId}`;
   }
+})
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.addToCartBtn').forEach(button => {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        const productId = this.getAttribute('data-product-id');
+        const cartId = document.getElementById('cartForm').getAttribute('action').split('/').pop();
+
+        Swal.fire({
+          title: "¿Agregar al carrito?",
+          text: "¿Deseas agregar este producto al carrito?",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#F8A126",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, agregar al carrito",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            axios.post(`/cart/${cartId}/product/${productId}`)
+              .then(response => {
+                Swal.fire("Agregado al carrito", "El producto se ha agregado al carrito correctamente.", "success");
+                // Actualizar la cantidad en el icono del carrito
+                updateCartQuantity(cartId);
+              })
+              .catch(error => {
+                console.error(error);
+                Swal.fire("Error", "Hubo un problema al agregar el producto al carrito.", "error");
+              });
+          }
+        });
+      });
+    });
+  });
 </script>
 
 <script>
-  // Función para actualizar la cantidad del carrito
-  function updateCartQuantity() {
-    console.log('Antes de hacer la solicitud');
-
-    // Realizar una solicitud al servidor para obtener la cantidad del carrito
-    axios.get('cart/quantity/:cartId')
+  function updateCartQuantity(cartId) {
+    // Realizar la solicitud al servidor para obtener la cantidad del carrito
+    axios.get(`/cart/quantity/${cartId}`)
       .then(response => {
         const cartQuantityFromServer = response.data.quantity;
+
         // Actualizar el contenido del elemento con el id "cartQuantity"
         document.getElementById('cartQuantity').textContent = cartQuantityFromServer.toString();
-        console.log('Cantidad actualizada correctamente:', cartQuantityFromServer);
       })
       .catch(error => {
         console.error('Error al obtener la cantidad del carrito:', error);
       });
-  }
-
-  // Llamar a la función al cargar la página
-  updateCartQuantity();
-
-</script>
-
-<!-- Script para manejar las operaciones con eventos de clic -->
-<script>
-  function addToCart(userId, productId) {
-    console.log('userId:', userId);
-    console.log('productId:', productId);
-    // Usar SweetAlert para confirmar la adición al carrito
-    Swal.fire({
-      title: "¿Agregar al carrito?",
-      text: "¿Deseas agregar este producto al carrito?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#F8A126",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, agregar al carrito",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-
-        // Usar Axios para enviar la solicitud de adición al carrito con el método POST
-        axios.post(`/user/${userId}/product/${productId}`)
-          .then(response => {
-            // Manejar la respuesta si es necesario
-            // Opcional: Puedes mostrar un mensaje adicional al usuario con Swal.fire si la adición es exitosa
-            Swal.fire("Agregado al carrito", "El producto se ha agregado al carrito correctamente.", "success");
-          })
-          .catch(error => {
-            // Manejar errores si es necesario
-            console.error(error);
-            // Opcional: Puedes mostrar un mensaje de error con Swal.fire si hay un problema
-            Swal.fire("Error", "Hubo un problema al agregar el producto al carrito.", "error");
-          });
-      }
-    });
   }
 </script>

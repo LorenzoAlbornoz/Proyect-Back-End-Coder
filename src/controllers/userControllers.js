@@ -41,54 +41,6 @@ export class UserController {
             });
         }
     }
-    
-    async agregarAlCarrito(userId, productId) {
-        try {
-            const usuario = await userModel.findById(userId);
-            if (!usuario) {
-                return { mensaje: "Usuario no encontrado", status: 404 };
-            }
-    
-            // Utiliza la función getProductById para obtener el producto por su ID
-            const producto = await productModel.findById(productId);
-            if (!producto) {
-                return { mensaje: "Producto no encontrado", status: 404 };
-            }
-    
-            // Obtener el ID del carrito del usuario
-            const cartId = usuario.cart;
-    
-            // Buscar el carrito por su ID y populando los productos
-            const cart = await cartModel.findById(cartId);
-            if (!cart) {
-                return { mensaje: "Carrito no encontrado", status: 404 };
-            }
-    
-            // Verificar si el producto ya existe en el carrito
-            const existingProductIndex = cart.products.findIndex(p => p.product.equals(producto._id));
-    
-            if (existingProductIndex !== -1) {
-                // Si el producto ya está en el carrito, incrementar la cantidad
-                cart.products[existingProductIndex].quantity += 1;
-            } else {
-                // Si el producto no está en el carrito, agregarlo con cantidad 1
-                cart.products.push({
-                    product: producto._id,
-                    quantity: 1,
-                });
-            }
-    
-            await cart.save();
-    
-            // Devuelve un objeto con información sobre la operación
-            return { mensaje: "Producto agregado al carrito correctamente", status: 200, usuario };
-        } catch (error) {
-            // Maneja los errores según tu lógica
-            console.error(error);
-            return { mensaje: "Hubo un error, inténtelo más tarde", status: 500 };
-        }
-    }
-    
 
     async register(req, res) {
         const { name, username, password } = req.body;
@@ -143,7 +95,7 @@ export class UserController {
                 name: user.name,
                 email: user.username,
                 name: user.name,
-                rol: user.role,
+                role: user.role,
             };
             const token = jwt.sign(payload, secret, {
                 algorithm: process.env.JWT_ALGORITHM,

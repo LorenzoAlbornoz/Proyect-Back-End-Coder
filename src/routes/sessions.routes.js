@@ -4,7 +4,7 @@ import User from "../models/userSchema.js"
 import Cart from "../models/cartSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
-import { encryptPassword, comparePassword, generateToken, passportCall} from '../utils.js';
+import { encryptPassword, comparePassword, generateToken, passportCall, authToken} from '../utils.js';
 import initPassport from '../config/passport.config.js';
 
 initPassport()
@@ -60,7 +60,13 @@ const handlePolicies = policies => {
     }
 }
 
-
+router.get('/current', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
+    if (req.user) {
+        res.status(200).send({ status: 'OK', data: req.user });
+    } else {
+        res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' });
+    }
+});
 router.get('/logout', async (req, res) => {
     try {
         res.clearCookie('codertoken');
@@ -110,7 +116,7 @@ router.get('/github', passport.authenticate('githubAuth', { scope: ['user:email'
 
 router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const { _id, name, email, role } = req.user;
+        const { _id, email, role } = req.user;
 
         // Verifica si el correo electrónico ya está asociado a un usuario existente
         let user = await User.findOne({ email });
@@ -129,7 +135,7 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
                 name: user.name,
                 email: user.email,
                 name: user.name,
-                rol: user.role,
+                role: user.role,
                 cart: user.cart
             }, '1h')
 
@@ -177,7 +183,7 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
                 name: user.name,
                 email: user.email,
                 name: user.name,
-                rol: user.role,
+                role: user.role,
                 cart: user.cart
             }, '1h')
             res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
@@ -239,9 +245,6 @@ router.post('/register', async (req, res) => {
 // La función passportCall nos permite una mejor intercepción de errores (ver utils.js)
 // Este endpoint muestra cómo podemos encadenar distintos middlewares en el proceso,
 // aquí primero autenticamos y luego autorizamos.
-router.get('/current', passportCall('jwtAuth', { session: false }), handlePolicies(['regular', 'premium', 'admin']), async (req, res) => {
-    res.status(200).send({ status: 'OK', data: req.user })
-})
 
 router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
     try {

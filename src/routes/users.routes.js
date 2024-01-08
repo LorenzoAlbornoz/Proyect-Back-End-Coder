@@ -15,8 +15,8 @@ router.post('/user/:userId/product/:productId', async (req, res) => {
   });
   
   router.delete('/user/:userId', async (req, res) => {
-    const {userId} = req.params.userId;
-    console.log(req.params)
+    const {userId} = req.params;
+
     try {
         const deleteUserResult = await userController.deleteUser(userId);
 

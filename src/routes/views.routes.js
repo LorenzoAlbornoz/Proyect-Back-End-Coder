@@ -44,7 +44,6 @@ router.get('/products-views', async (req, res) => {
           };
           
           const result = await productController.paginate(filter, options);
-          console.log('UserId:', userId)
           res.render('products-views', {
               title: 'Listado de Productos',
               userId: userId,
@@ -85,6 +84,18 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
+router.get('/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const user = await userController.getUserByID(userId);
+
+    res.status(user.status).json({ mensaje: user.mensaje, user: user.user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ mensaje: "Hubo un error, inténtelo más tarde", status: 500 });
+  }
+});
 
 router.post('/cart/:cartId/product/:productId', async (req, res) => {
     const cartId = req.params.cartId;
@@ -207,16 +218,5 @@ router.get('/restore', async (req, res) => {
       res.render('restore', {})
   }
 })
-
-router.post('/user/:userId/product/:productId', async (req, res) => {
-  const userId = req.params.userId;
-  const productId = req.params.productId;
-
-  // Llama a la función del controlador de usuario para agregar el producto al carrito
-  const addProductResult = await userController.agregarAlCarrito(userId, productId);
-
-  res.status(addProductResult.status).json({ mensaje: addProductResult.mensaje });
-});
-
 
 export default router;

@@ -37,13 +37,19 @@ export class CartController {
           return 'No se encuentra el carrito';
         }
     
-        // Calcular el total sumando el precio de cada producto multiplicado por su cantidad
-        const total = cart.products.reduce((acc, product) => {
-          return acc + (product.product.price * product.quantity);
-        }, 0);
-    
-        // Agregar la propiedad 'total' al objeto cart
-        cart.total = total;
+       // Calcular el total sumando el precio de cada producto multiplicado por su cantidad
+       const total = cart.products.reduce((acc, product) => {
+        return acc + (product.product.price * product.quantity);
+      }, 0);
+  
+      // Calcular la cantidad total de productos sumando las cantidades de cada producto
+      const totalQuantity = cart.products.reduce((acc, product) => {
+        return acc + product.quantity;
+      }, 0);
+  
+      // Agregar las propiedades 'total' y 'totalQuantity' al objeto cart
+      cart.total = total;
+      cart.totalQuantity = totalQuantity;
     
         return cart;
       } catch (err) {
