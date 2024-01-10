@@ -2,6 +2,7 @@ import * as url from 'url'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
+import config from './config.js'
 
 // Obtener la ruta del archivo actual y el directorio actual
 
@@ -10,7 +11,7 @@ export const __filename = url.fileURLToPath(import.meta.url)
 export const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 // Función para encriptar la contraseña
 export const encryptPassword = (password) => {
-    const hash = bcrypt.hashSync(password, parseInt(process.env.ROUNDS));
+    const hash = bcrypt.hashSync(password, parseInt(config.ROUNDS));
     return hash;
 };
 
@@ -30,7 +31,7 @@ export const authToken = (req, res, next) => {
     
     if (!receivedToken) return res.redirect('/login')
 
-    jwt.verify(receivedToken, process.env.PRIVATE_KEY, (err, credentials) => {
+    jwt.verify(receivedToken, config.PRIVATE_KEY, (err, credentials) => {
         if (err) return res.status(403).send({ status: 'ERR', data: 'No autorizado' })
         // Si el token verifica ok, pasamos los datos del payload a un objeto req.user
         req.user = credentials

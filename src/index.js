@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
 import handlebars from 'express-handlebars'
 import cors from "cors"
@@ -19,19 +17,22 @@ import viewsRouter from './routes/views.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
 import usersRouter from './routes/users.routes.js';
 
+
+import config from './config.js'
+
 const app = express();
 
 app.use(cors())
 app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser('secretKeyAbc123'))
+app.use(cookieParser(config.SECRET_KEY))
     
 
 const fileStorage = FileStore(session)
 app.use(session({
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_CONNECTION, mongoOptions: {}, ttl: 60, clearInterval: 5000 }), // MONGODB
-    secret: 'secretKeyAbc123',
+    store: MongoStore.create({ mongoUrl: config.MONGODB_CONNECTION, mongoOptions: {}, ttl: 60, clearInterval: 5000 }), // MONGODB
+    secret: config.SECRET_KEY,
     resave: false,
     saveUninitialized: false
 }))
@@ -50,21 +51,21 @@ app.engine('handlebars', handlebars.engine({
   app.set('view engine', 'handlebars')
 
 cloudinary.config({
-    cloud_name:process.env.CLOUD_NAME,
-    api_key:process.env.APY_KEY,
-    api_secret: process.env.APY_SECRET
+    cloud_name:config.CLOUD_NAME,
+    api_key:config.APY_KEY,
+    api_secret: config.APY_SECRET
 });
 
-app.use(process.env.API, cartsRouter);
-app.use(process.env.API, categoryRouter)
-app.use(process.env.API, productsRouter);
+app.use(config.API, cartsRouter);
+app.use(config.API, categoryRouter)
+app.use(config.API, productsRouter);
 app.use('/', viewsRouter)
-app.use(process.env.API, sessionsRouter)
-app.use(process.env.API, usersRouter);
+app.use(config.API, sessionsRouter)
+app.use(config.API, usersRouter);
 
 app.use('/static', express.static(`${__dirname}/public`))
 
-const port = process.env.PORT
+const port = config.PORT
 
 mongoDBConnection()
 

@@ -1,6 +1,7 @@
 import userModel from "../models/userSchema.js";
 import productModel from '../models/productSchema.js'
 import cartModel from '../models/cartSchema.js'
+import config from "../config.js";
 
 export class UserController {
     constructor() { }
@@ -76,7 +77,7 @@ export class UserController {
     async login(req, res) {
         const { username, password } = req.body;
         const user = await userModel.findOne({ username });
-        const secret = process.env.JWT_SECRET;
+        const secret = config.JWT_SECRET;
         try {
             if (!user) {
                 return res.status(404).json({
@@ -98,7 +99,7 @@ export class UserController {
                 role: user.role,
             };
             const token = jwt.sign(payload, secret, {
-                algorithm: process.env.JWT_ALGORITHM,
+                algorithm: config.JWT_ALGORITHM,
                 expiresIn: "12h",
             });
             return res.status(200).json({

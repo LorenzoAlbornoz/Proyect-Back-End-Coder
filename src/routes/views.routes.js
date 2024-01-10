@@ -5,6 +5,7 @@ import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { UserController } from '../controllers/userControllers.js';
 import { authToken } from '../utils.js';
+import config from '../config.js';
 
 const router = Router();
 const productController = new ProductController();
@@ -17,7 +18,7 @@ router.get('/products-views', async (req, res) => {
 
       if (token) {
           // Verificar y decodificar el token JWT
-          const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+          const decoded = jwt.verify(token, config.PRIVATE_KEY);
 
           // Puedes acceder a la información del usuario desde el token decodificado
           const { sub: userId, name, cart } = decoded;
@@ -181,7 +182,7 @@ router.get('/login', async (req, res) => {
 
       if (token) {
           // Verificar y decodificar el token JWT
-          const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+          const decoded = jwt.verify(token, config.PRIVATE_KEY);
 
           // Puedes acceder a la información del usuario desde el token decodificado
           const { email } = decoded;

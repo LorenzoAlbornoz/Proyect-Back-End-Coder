@@ -19,6 +19,7 @@ import GithubStrategy from 'passport-github2'
 import jwt from 'passport-jwt'
 import userModel from '../models/userSchema.js'
 import { encryptPassword, comparePassword } from '../utils.js';
+import config from '../config.js'
 
 const initPassport = () => {
     // Función utilizada por la estrategia registerAuth
@@ -129,15 +130,15 @@ const initPassport = () => {
 
     // Creamos estrategia para autenticación externa con Github
     passport.use('githubAuth', new GithubStrategy({
-        clientID: 'Iv1.385fcec6a2d99a29',
-        clientSecret: 'a5a083af231a247b2b5467d0b650db8078a53445',
+        clientID: config.GITHUB_AUTH.clientId,
+        clientSecret: config.GITHUB_AUTH.clientSecret,
         callbackURL: 'http://localhost:8080/api/githubcallback'
     }, verifyGithub))
 
     // Estrategia para autenticación con JWT
     passport.use('jwtAuth', new jwt.Strategy({
         jwtFromRequest: jwt.ExtractJwt.fromExtractors([cookieExtractor]),
-        secretOrKey: 'Coder55605_Key_Jwt'
+        secretOrKey: config.SECRET_KEY
     }, verifyJwt))
 
     // Métodos "helpers" de passport para manejo de datos de sesión
