@@ -1,21 +1,8 @@
-/**
- * passport.local siempre requiere 2 cosas: username y password
- * 
- * podemos usar el parámetro usernameField para cambiar el nombre del campo que
- * manejaremos como usuario (email en nuestro caso)
- * 
- * passport utiliza un callback done():
- *  - parámetro 1: el error (null indica que no hay error)
- *  - parámetro 2: el objeto con datos de usuario que se devuelve en la respuesta
- *      - done(null, user) -> user tendrá los datos de usuario
- *      - done(null, false) -> no hay error pero los datos de usuario no se devuelven
- * 
- * passport.use() nos permite configurar distintas estrategias
- */
 
 import passport from 'passport'
 import LocalStrategy from 'passport-local'
 import GithubStrategy from 'passport-github2'
+import GoogleStrategy from 'passport-google-oauth20'
 import jwt from 'passport-jwt'
 import userModel from '../models/userSchema.js'
 import { encryptPassword, comparePassword } from '../utils.js';
@@ -55,7 +42,7 @@ const initPassport = () => {
     // Función utilizada por la estrategia restoreAuth
     const verifyRestoration = async (req, username, password, done) => {
         try {
-            if ( username.length === 0 || password.length === 0) {
+            if (username.length === 0 || password.length === 0) {
                 return done('Se requiere email y password en el body', false)
             }
 
@@ -83,6 +70,7 @@ const initPassport = () => {
                     name: profile.displayName,
                     email: profile.username,
                     password: '',
+                    role: 'user'
                 };
 
                 const process = await userModel.create(newUser);
@@ -96,9 +84,31 @@ const initPassport = () => {
         }
     };
 
+
+    const verifyGoogle = async (req, accessToken, refreshToken, profile, done) => {
+        try {
+            /**
+             * Al igual que en el caso de Github, tomamos datos del profile para armar
+             * nuestro user. Podríamos por supuesto verificar existencia en nuestra bbdd
+             * y cargar un nuevo usuario, como lo hacemos en la estrategia de Github.
+             */
+            const user = {
+                name: profile.displayName,
+                email: profile.emails[0].value,
+                password: '',
+                role: 'user'
+            }
+
+            return done(null, user);
+        } catch (err) {
+            return done(`Error passport Google: ${err.message}`)
+        }
+    }
+
+
     const verifyJwt = async (payload, done) => {
         try {
-            return done (null, payload);
+            return done(null, payload);
         } catch (err) {
             return done(err);
         }
@@ -113,7 +123,7 @@ const initPassport = () => {
         if (req && req.cookies) token = req.cookies['codertoken'];
         return token;
     }
-    
+
     // Creamos estrategia local de autenticación para registro
     passport.use('registerAuth', new LocalStrategy({
         passReqToCallback: true,
@@ -134,6 +144,13 @@ const initPassport = () => {
         clientSecret: config.GITHUB_AUTH.clientSecret,
         callbackURL: 'http://localhost:8080/api/githubcallback'
     }, verifyGithub))
+
+    passport.use('googleAuth', new GoogleStrategy({
+        clientID: config.GOOGLE_AUTH.clientId,
+        clientSecret: config.GOOGLE_AUTH.clientSecret,
+        callbackURL: 'http://localhost:8080/api/googlecallback',
+        passReqToCallback: true
+    }, verifyGoogle))
 
     // Estrategia para autenticación con JWT
     passport.use('jwtAuth', new jwt.Strategy({
@@ -157,3 +174,4 @@ const initPassport = () => {
 }
 
 export default initPassport
+

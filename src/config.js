@@ -16,6 +16,10 @@ const config = {
     GITHUB_AUTH: {
         clientId: process.env.GITHUB_AUTH_CLIENT_ID,
         clientSecret: process.env.GITHUB_AUTH_CLIENT_SECRET,
+    },
+    GOOGLE_AUTH: {
+        clientId: process.env.GOOGLE_AUTH_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_AUTH_CLIENT_SECRET
     }
 };
 
