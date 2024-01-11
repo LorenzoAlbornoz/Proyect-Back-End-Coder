@@ -141,8 +141,6 @@ const initPassport = () => {
         secretOrKey: config.SECRET_KEY
     }, verifyJwt))
 
-    // Métodos "helpers" de passport para manejo de datos de sesión
-    // Son de uso interno de passport, normalmente no tendremos necesidad de tocarlos.
     passport.serializeUser((user, done) => {
         done(null, user._id)
     })
