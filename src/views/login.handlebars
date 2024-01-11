@@ -10,6 +10,7 @@
             max-width: 360px;
             margin: auto;
             margin-top: 64px;
+            text-align: center;
         }
 
         h1 {
@@ -25,7 +26,7 @@
         }
 
         .input-group {
-            width: 300px;
+            width: 100%;
             margin-bottom: 32px;
         }
 
@@ -41,11 +42,42 @@
             padding: 10px;
         }
 
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary,
+        .btn-warning {
+            flex: 1;
+            margin-right: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-secondary:hover,
+        .btn-warning:hover {
+            filter: brightness(90%);
+            /* Agrega un efecto de brillo al pasar el ratón sobre los botones */
+        }
+
         .btn-success {
             background-color: #28a745;
             color: #fff;
             border: none;
-            padding: 10px 20px;
+            padding: 10px;
             border-radius: 4px;
             cursor: pointer;
         }
@@ -77,8 +109,13 @@
                 <input type="password" name="password" class="form-control" required="required" placeholder="Password">
             </div>
 
-            <div style="margin-bottom: 32px;">
-                <a href="/api/github"><i class="fab fa-github"></i> Ingresar con Github</a>
+            <div class="btn-container">
+                <a href="/api/github" class="btn btn-secondary">
+                    <i class="fab fa-github"></i> Ingresar con Github
+                </a>
+                <a href="/api/google" class="btn btn-warning">
+                    <i class="fab fa-google"></i> Ingresar con Google
+                </a>
             </div>
 
             <div style="margin-bottom: 32px;">

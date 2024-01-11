@@ -166,15 +166,6 @@ router.get('/cart/quantity/:cartId', async (req, res) => {
     }
 });
 
-router.get('/github', passport.authenticate('githubAuth', { scope: ['user:username'] }), async (req, res) => {
-})
-
-router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
-    req.session.user = { username: req.user.email, admin: true }
-    // req.session.user = req.user
-    res.redirect('/profile')
-})
-
 router.get('/login', async (req, res) => {
   try {
       // Verificar si el token está presente en las cookies
