@@ -1,8 +1,8 @@
-
 import passport from 'passport'
 import LocalStrategy from 'passport-local'
 import GithubStrategy from 'passport-github2'
 import GoogleStrategy from 'passport-google-oauth20'
+import FacebookStrategy from 'passport-facebook'
 import jwt from 'passport-jwt'
 import userModel from '../models/userSchema.js'
 import { encryptPassword, comparePassword } from '../utils.js';
@@ -84,27 +84,61 @@ const initPassport = () => {
         }
     };
 
-
-    const verifyGoogle = async (req, accessToken, refreshToken, profile, done) => {
+    passport.use(new GoogleStrategy({
+        clientID: config.GOOGLE_AUTH.clientId,
+        clientSecret: config.GOOGLE_AUTH.clientSecret,
+        callbackURL: "http://localhost:8080/api/googlecallback"
+      },
+      async function(accessToken, refreshToken, profile, done) {
         try {
-            /**
-             * Al igual que en el caso de Github, tomamos datos del profile para armar
-             * nuestro user. Podríamos por supuesto verificar existencia en nuestra bbdd
-             * y cargar un nuevo usuario, como lo hacemos en la estrategia de Github.
-             */
-            const user = {
-                name: profile.displayName,
-                email: profile.emails[0].value,
-                password: '',
-                role: 'user'
-            }
-
-            return done(null, user);
-        } catch (err) {
-            return done(`Error passport Google: ${err.message}`)
+          // Buscar o crear un usuario en tu base de datos
+          let user = await userModel.findOne({ googleId: profile.id });
+    
+          if (!user) {
+            // Utiliza el nombre de Google como el nombre del usuario
+            const newUser = {
+              name: profile.displayName,
+              googleId: profile.id
+            };
+    
+            const process = await userModel.create(newUser);
+    
+            // Llama a done con el usuario encontrado o creado
+            return done(null, process);
+          }
+        } catch (error) {
+          return done(error);
         }
-    }
+      }
+    ));
 
+    passport.use(new FacebookStrategy({
+        clientID: config.FACEBOOK_AUTH.clientId,
+        clientSecret: config.FACEBOOK_AUTH.clientSecret,
+        callbackURL: "http://localhost:8080/api/facebookcallback"
+      },
+      async function(accessToken, refreshToken, profile, done) {
+        try {
+          // Buscar o crear un usuario en tu base de datos
+          let user = await userModel.findOne({ facebookId: profile.id });
+    
+          if (!user) {
+            // Utiliza el nombre de Facebook como el nombre del usuario
+            const newUser = {
+              name: profile.displayName,
+              facebookId: profile.id
+            };
+    
+            const process = await userModel.create(newUser);
+    
+            // Llama a done con el usuario encontrado o creado
+            return done(null, process);
+          }
+        } catch (error) {
+          return done(error);
+        }
+      }
+    ));
 
     const verifyJwt = async (payload, done) => {
         try {
@@ -144,13 +178,6 @@ const initPassport = () => {
         clientSecret: config.GITHUB_AUTH.clientSecret,
         callbackURL: 'http://localhost:8080/api/githubcallback'
     }, verifyGithub))
-
-    passport.use('googleAuth', new GoogleStrategy({
-        clientID: config.GOOGLE_AUTH.clientId,
-        clientSecret: config.GOOGLE_AUTH.clientSecret,
-        callbackURL: 'http://localhost:8080/api/googlecallback',
-        passReqToCallback: true
-    }, verifyGoogle))
 
     // Estrategia para autenticación con JWT
     passport.use('jwtAuth', new jwt.Strategy({

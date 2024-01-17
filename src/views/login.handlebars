@@ -37,6 +37,7 @@
         }
 
         .form-control {
+            width: calc(100% - 32px);
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 10px;
@@ -44,33 +45,33 @@
 
         .btn-container {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             margin-bottom: 20px;
         }
 
         .btn-secondary,
-        .btn-warning {
-            flex: 1;
-            margin-right: 10px;
+        .btn-light {
+            margin-bottom: 10px;
             padding: 10px;
             border-radius: 4px;
             cursor: pointer;
+            width: 100%;
+            transition: filter 0.3s; /* Transición para el efecto de brillo */
         }
 
         .btn-secondary {
-            background-color: #6c757d;
+            background-color: #1877f2; /* Azul de Facebook */
             color: #fff;
         }
 
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
+        .btn-light {
+            background-color: #DB4437; /* Rojo de Google */
+            color: #fff;
         }
 
         .btn-secondary:hover,
-        .btn-warning:hover {
+        .btn-light:hover {
             filter: brightness(90%);
-            /* Agrega un efecto de brillo al pasar el ratón sobre los botones */
         }
 
         .btn-success {
@@ -80,6 +81,7 @@
             padding: 10px;
             border-radius: 4px;
             cursor: pointer;
+            width: calc(100% - 32px);
         }
 
         .btn-success:hover {
@@ -110,10 +112,10 @@
             </div>
 
             <div class="btn-container">
-                <a href="/api/github" class="btn btn-secondary">
-                    <i class="fab fa-github"></i> Ingresar con Github
+                <a href="/api/facebook" class="btn-secondary">
+                    <i class="fab fa-facebook"></i> Ingresar con Facebook
                 </a>
-                <a href="/api/google" class="btn btn-warning">
+                <a href="/api/google" class="btn-light">
                     <i class="fab fa-google"></i> Ingresar con Google
                 </a>
             </div>
@@ -122,7 +124,7 @@
                 <a href="/restore">¿Olvidaste tu contraseña?</a>
             </div>
 
-            <button type="submit" class="btn btn-success">Ingresar</button>
+            <button type="submit" class="btn-success">Ingresar</button>
         </form>
 
         <p style="margin-top: 16px;">

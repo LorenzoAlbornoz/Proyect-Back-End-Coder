@@ -114,9 +114,6 @@ router.get('/failrestore', async (req, res) => {
 router.get('/github', passport.authenticate('githubAuth', { scope: ['user:email'] }), async (req, res) => {
 });
 
-router.get('/google', passport.authenticate('googleAuth', { scope: ['email', 'profile'] }), async (req, res) => {
-})
-
 router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
     try {
         const { _id, email } = req.user;
@@ -156,46 +153,104 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
       });
     }
   });
+
+  router.get('/google',passport.authenticate('google', { scope: ['profile'] }));
+
   
-router.get('/googlecallback', passport.authenticate('googleAuth', { failureRedirect: '/login' }), async (req, res) => {
+router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const { _id, email } = req.user;
+        const {  name } = req.user;
 
         // Verifica si el correo electrónico ya está asociado a un usuario existente
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ name });
 
-        // Crea un nuevo carrito y vincúlalo al usuario
+        if (!user) {
+            // Si el usuario no existe, crea uno nuevo con la información de Facebook
+            user = new User({
+                name: name
+            });
+            await user.save();
+        }
+
+    // Verifica si el usuario ya tiene un carrito
+    if (!user.cart) {
+        // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
         const newCart = await cartController.createCart(user);
-
-        // Asigna la referencia del carrito al campo 'cart' del usuario
         user.cart = newCart._id;
-
-        // Guarda nuevamente el usuario con la referencia al carrito
         await user.save();
+    }
 
-       const access_token = generateToken({ 
-                sub: user.id,
-                name: user.name,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-                cart: user.cart
-            }, '1h')
+        const access_token = generateToken({ 
+            sub: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            cart: user.cart
+        }, '1h');
 
         // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
 
-        // Redirige al usuario a la vista de productos o cualquier otra página deseada
+        // Redirige al usuario a la vista de productos u otra página deseada
         res.redirect('/products-views');
     } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        mensaje: 'Hubo un error, inténtelo más tarde',
-        status: 500,
-        error: error.message,
-      });
+        console.error(error);
+        res.status(500).json({
+            mensaje: 'Hubo un error, inténtelo más tarde',
+            status: 500,
+            error: error.message,
+        });
     }
-})
+});
+
+// Ruta de autenticación de Facebook
+router.get('/facebook', passport.authenticate('facebook'));
+
+// Ruta de retorno después de la autenticación de Facebook
+router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
+    try {
+        const { name } = req.user;
+        // Verifica si el correo electrónico ya está asociado a un usuario existente
+        let user = await User.findOne({ name });
+      
+        if (!user) {
+            // Si el usuario no existe, crea uno nuevo con la información de Facebook
+            user = new User({
+                name: name
+            });
+            await user.save();
+        }
+
+    // Verifica si el usuario ya tiene un carrito
+    if (!user.cart) {
+        // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
+        const newCart = await cartController.createCart(user);
+        user.cart = newCart._id;
+        await user.save();
+    }
+
+        const access_token = generateToken({ 
+            sub: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            cart: user.cart
+        }, '1h');
+
+        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
+
+        // Redirige al usuario a la vista de productos u otra página deseada
+        res.redirect('/products-views');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            mensaje: 'Hubo un error, inténtelo más tarde',
+            status: 500,
+            error: error.message,
+        });
+    }
+});
 
 // Nuestro primer endpoint de login!, básico por el momento, con algunas
 // validacione "hardcodeadas", pero nos permite comenzar a entender los conceptos.router.post('/login', async (req, res) => {

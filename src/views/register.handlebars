@@ -6,11 +6,25 @@
     <title>Registro de Usuario</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        .common-btn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .common-btn:hover {
+            background-color: #218838;
+        }
+
         .register-container {
             max-width: 360px;
             margin: auto;
             margin-top: 64px;
-             text-align: center;
+            text-align: center;
         }
 
         h1 {
@@ -40,6 +54,12 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 10px;
+            width: calc(100% - 32px); /* Ancho igual al 100% menos el espacio del padding */
+        }
+
+        a {
+            text-decoration: none;
+            color: #007BFF;
         }
 
         .btn-success {
@@ -49,15 +69,11 @@
             padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
+            width: calc(100% - 32px); /* Ancho igual al 100% menos el espacio del padding */
         }
 
         .btn-success:hover {
             background-color: #218838;
-        }
-
-        a {
-            text-decoration: none;
-            color: #007BFF;
         }
     </style>
 </head>
@@ -70,20 +86,17 @@
         <form action="/api/register" method="POST">
             <div class="input-group">
                 <span class="input-group-text"><i class="far fa-user"></i></span>
-                <input type="text" id="name" name="name" class="form-control"
-                    placeholder="Ingresa tu nombre" required>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Ingresa tu nombre" required>
             </div>
 
             <div class="input-group">
                 <span class="input-group-text"><i class="far fa-envelope"></i></span>
-                <input type="email" id="email" name="email" class="form-control"
-                    placeholder="Ingresa tu email" required>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Ingresa tu email" required>
             </div>
 
             <div class="input-group">
                 <span class="input-group-text"><i class="far fa-calendar"></i></span>
-                <input type="text" id="age" name="age" class="form-control"
-                    placeholder="Ingresa tu edad" required>
+                <input type="text" id="age" name="age" class="form-control" placeholder="Ingresa tu edad" required>
             </div>
 
             <div class="input-group">
@@ -95,7 +108,7 @@
             <button type="submit" class="btn btn-success">Registrarse</button>
         </form>
 
-        <p style="margin-top: 16px;"></p>
+        <p style="margin-top: 16px;">
             <a href="/login">¿Ya tienes una cuenta? Iniciar sesión</a>
         </p>
     </div>
