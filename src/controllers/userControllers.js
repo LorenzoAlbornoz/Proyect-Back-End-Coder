@@ -136,19 +136,19 @@ export class UserController {
             });
         }
     }
-    
+
     async deleteUser(req, res) {
-        const  {userId}  = req.params;
+        const { userId } = req.params;
         try {
             const user = await userModel.findByIdAndDelete(userId);
-    
+
             if (!user) {
                 return res.status(404).json({
                     mensaje: "Usuario no encontrado",
                     status: 404,
                 });
             }
-    
+
             return res.status(200).json({
                 mensaje: "Usuario borrado correctamente",
                 status: 200,

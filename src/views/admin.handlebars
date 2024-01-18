@@ -6,10 +6,15 @@
 </div>
 
 <ul class="list-group">
-    {{#each data}}
-        <li class="list-group-item">{{this.username}}</li>
+    {{#each data.users}}
+        <li class="list-group-item">
+            <strong>Nombre:</strong> {{this.name}}, 
+            <strong>Email:</strong> {{this.email}}
+            <!-- Agrega más propiedades según la estructura de tus datos -->
+        </li>
     {{/each}}
 </ul>
+
 
 <nav aria-label="Paginacion">
     <ul class="pagination">

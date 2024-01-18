@@ -2,3 +2,17 @@ body{
     color: #ffffff;
     background-color: #333333;
 }
+
+.productCard__favorite {
+    border: none;
+    background-color: rgba(255, 255, 255, 0);
+  }
+  
+  .productCard__favorite-icons {
+    font-size: 2rem;
+    color: #000; /* Color predeterminado para los íconos no favoritos */
+  }
+  
+  .productCard__favorite-icons.favorite {
+    color: #e74c3c; /* Color para los íconos favoritos */
+  }
