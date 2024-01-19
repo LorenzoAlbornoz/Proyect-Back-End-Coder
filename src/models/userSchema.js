@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import mongoosePaginate from 'mongoose-paginate-v2'
 import Cart from './cartSchema.js'
+import Favorite from './favoriteSchema.js'
 
 mongoose.pluralize(null)
 
@@ -27,6 +28,10 @@ const userSchema = new mongoose.Schema({
     cart: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: Cart
+    },
+    favorite:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Favorite
     },
     role: {
         type:String,
