@@ -1,6 +1,9 @@
 import userModel from "../models/userSchema.js";
-import productModel from '../models/productSchema.js'
-import cartModel from '../models/cartSchema.js'
+import cartModel from "../models/cartSchema.js";
+import favoriteModel from "../models/favoriteSchema.js"
+import { encryptPassword, comparePassword } from "../utils.js"; 
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import config from "../config.js";
 
 export class UserController {
@@ -11,47 +14,38 @@ export class UserController {
             const users = await userModel.find().lean();
             return users;
         } catch (err) {
-            return err.message;
+            throw new Error(err.message);
         }
     }
 
     async getUserByID(id) {
         try {
-            const user = await userModel.findById(id);
             if (!mongoose.isValidObjectId(id)) {
-                return res.status(400).json({
-                    mensaje: "Id inválido",
-                    status: 400,
-                });
+                throw new Error("Id inválido");
             }
+
+            const user = await userModel.findById(id);
+
             if (!user) {
-                return res.status(404).json({
-                    mensaje: "Usuario no encontrado",
-                    status: 404,
-                });
+                throw new Error("Usuario no encontrado");
             }
-            return res.status(200).json({
+
+            return {
                 mensaje: "Usuario encontrado",
                 status: 200,
                 user,
-            });
+            };
         } catch (error) {
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
     }
 
-    async register(req, res) {
-        const { name, username, password } = req.body;
-        const user = await userModel.findOne({ username });
+    async register(name, username, password) {
         try {
+            const user = await userModel.findOne({ username });
+
             if (user) {
-                return res.status(400).json({
-                    mensaje: "El usuario ya existe",
-                    status: 400,
-                });
+                throw new Error("El usuario ya existe");
             }
 
             const newUser = new userModel({
@@ -61,173 +55,148 @@ export class UserController {
             });
 
             await newUser.save();
-            res.status(201).json({
+
+            return {
                 mensaje: "Usuario creado exitosamente",
                 status: 201,
                 newUser,
-            });
+            };
         } catch (error) {
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
     }
 
-    async login(req, res) {
-        const { username, password } = req.body;
-        const user = await userModel.findOne({ username });
-        const secret = config.JWT_SECRET;
+    async login(username, password) {
         try {
+            const user = await userModel.findOne({ username });
+
             if (!user) {
-                return res.status(404).json({
-                    mensaje: "Usuario no encontrado",
-                    status: 404,
-                });
+                throw new Error("Usuario no encontrado");
             }
+
             if (!comparePassword(password, user.password)) {
-                return res.status(400).json({
-                    mensaje: "La contraseña es inválida",
-                    status: 400,
-                });
+                throw new Error("La contraseña es inválida");
             }
+
+            const secret = config.JWT_SECRET;
+
             const payload = {
                 sub: user._id,
                 name: user.name,
                 email: user.username,
-                name: user.name,
                 role: user.role,
             };
+
             const token = jwt.sign(payload, secret, {
                 algorithm: config.JWT_ALGORITHM,
                 expiresIn: "12h",
             });
-            return res.status(200).json({
+
+            return {
                 mensaje: "Inicio de sesión exitoso",
                 status: 200,
                 token,
-            });
+            };
         } catch (error) {
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
     }
 
-    async recoverPassword(req, res) {
-        const { username } = req.body;
-        const user = await userModel.findOne({ username });
+    async recoverPassword(username) {
         try {
+            const user = await userModel.findOne({ username });
+
             if (!user) {
-                return res.status(404).json({
-                    mensaje: "Usuario no encontrado",
-                    status: 404,
-                });
+                throw new Error("Usuario no encontrado");
             }
-            return res.status(200).json({
+
+            return {
                 mensaje: "Se ha enviado un correo con instrucciones para recuperar la contraseña",
                 status: 200,
-            });
+            };
         } catch (error) {
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
     }
 
-    async deleteUser(req, res) {
-        const { userId } = req.params;
+    async deleteUser(userId) {
         try {
-            const user = await userModel.findByIdAndDelete(userId);
-
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                throw new Error("Formato de userId inválido");
+            }
+    
+            // Obtener el usuario antes de eliminarlo
+            const user = await userModel.findById(userId);
+    
             if (!user) {
-                return res.status(404).json({
+                return {
                     mensaje: "Usuario no encontrado",
                     status: 404,
-                });
+                };
             }
-
-            return res.status(200).json({
-                mensaje: "Usuario borrado correctamente",
-                status: 200,
-                user,
-            });
+    
+            // Eliminar el carrito si existe
+            if (user.cart) {
+                await cartModel.findByIdAndDelete(user.cart);
+            }
+    
+            // Eliminar la lista de favoritos si existe
+            if (user.favorite) {
+                await favoriteModel.findByIdAndDelete(user.favorite);
+            }
+    
+            // Eliminar al usuario
+            const deletedUser = await userModel.findByIdAndDelete(userId);
+    
+            if (deletedUser) {
+                return {
+                    mensaje: "Usuario y sus datos asociados eliminados correctamente",
+                    status: 200,
+                    user: deletedUser,
+                };
+            } else {
+                return {
+                    mensaje: "Usuario no encontrado",
+                    status: 404,
+                };
+            }
         } catch (error) {
-            console.log(error)
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
     }
 
-    async updateUser(req, res) {
-        const { id } = req.params;
-        const { name, username, password } = req.body;
+    async updateUser(id, name, username, password) {
         try {
             if (!mongoose.isValidObjectId(id)) {
-                return res.status(400).json({
-                    mensaje: "Id inválido",
-                    status: 400,
-                });
+                throw new Error("Id inválido");
             }
-            if (req.body.password) {
-                const user = await userModel.findByIdAndUpdate(
-                    id,
-                    {
-                        ...req.body,
-                        name,
-                        username,
-                        password: encryptPassword(password),
-                    },
-                    { new: true }
-                );
 
-                if (!user) {
-                    return res.status(404).json({
-                        mensaje: "Usuario no encontrado",
-                        status: 404,
-                    });
-                }
+            const updateFields = {
+                ...req.body,
+                name,
+                username,
+            };
 
-                return res.status(200).json({
-                    mensaje: "Usuario modificado correctamente",
-                    status: 200,
-                    user,
-                });
+            if (password) {
+                updateFields.password = encryptPassword(password);
             }
-            const user = await userModel.findByIdAndUpdate(
-                id,
-                {
-                    ...req.body,
-                    name,
-                    username,
-                },
-                { new: true }
-            );
+
+            const user = await userModel.findByIdAndUpdate(id, updateFields, { new: true });
 
             if (!user) {
-                return res.status(404).json({
-                    mensaje: "Usuario no encontrado",
-                    status: 404,
-                });
+                throw new Error("Usuario no encontrado");
             }
 
-            return res.status(200).json({
+            return {
                 mensaje: "Usuario modificado correctamente",
                 status: 200,
                 user,
-            });
+            };
         } catch (error) {
-            return res.status(500).json({
-                mensaje: "Hubo un error, inténtelo más tarde",
-                status: 500,
-            });
+            throw new Error("Hubo un error, inténtelo más tarde");
         }
-
     }
+
     async getUsersPaginated(page, limit) {
         try {
             return await userModel.paginate(
@@ -235,7 +204,7 @@ export class UserController {
                 { offset: (page * 50) - 50, limit: limit, lean: true }
             );
         } catch (err) {
-            return err.message;
+            throw new Error(err.message);
         }
     }
 }

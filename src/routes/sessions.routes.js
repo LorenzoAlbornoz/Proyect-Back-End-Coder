@@ -227,12 +227,13 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
         const { name } = req.user;
         // Verifica si el correo electrónico ya está asociado a un usuario existente
         let user = await User.findOne({ name });
-
+        console.log(user)
         if (!user) {
             // Si el usuario no existe, crea uno nuevo con la información de Facebook
             user = new User({
                 name: name
             });
+            console.log('Entro', user)
             await user.save();
         }
 
