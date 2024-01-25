@@ -3,6 +3,43 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import config from './config.js'
+import nodemailer from 'nodemailer'
+
+const mailerService = nodemailer.createTransport({
+    service:'gmail',
+    port:587,
+    auth:{
+        user:config.GOOGLE_APP_EMAIL,
+        pass:config.GOOGLE_APP_PASS
+    }
+})
+
+export const sendConfirmation = () => {
+    return async (req, res, next) =>{
+        try {
+            if (req.user && req.user.name && req.user.email) {
+                const subject = 'CODERStore confirmación registro';
+                const html = `
+                    <h1>CODERStore confirmación registro</h1>
+                    <p>Muchas gracias por registrarte ${req.user.name} !, te hemos dado de alta en nuestro sistema con el email ${req.user.email}</p>
+                `;
+
+                await mailerService.sendMail({
+                    from: config.GOOGLE_APP_EMAIL,
+                    to: req.user.email,
+                    subject: subject,  // Corregir aquí el nombre de la variable
+                    html: html
+                });
+                next();
+            } else {
+                // Manejar el caso en el que req.user no está definido o no tiene las propiedades esperadas
+                res.status(400).send({ status: 'ERR', data: 'Datos de usuario incompletos para enviar confirmación.' });
+            }
+        } catch (err) {
+            res.status(500).send({ status: 'ERR', data: err.message });
+        }
+    }
+}
 
 // Obtener la ruta del archivo actual y el directorio actual
 

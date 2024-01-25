@@ -4,7 +4,7 @@ import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { encryptPassword, comparePassword, generateToken, passportCall, authToken } from '../utils.js';
+import { encryptPassword, comparePassword, generateToken, passportCall, authToken, sendConfirmation } from '../utils.js';
 import initPassport from '../config/passport.config.js';
 
 initPassport()
@@ -165,18 +165,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const { name } = req.user;
-
-        // Verifica si el correo electrónico ya está asociado a un usuario existente
-        let user = await User.findOne({ name });
-
-        if (!user) {
-            // Si el usuario no existe, crea uno nuevo con la información de Facebook
-            user = new User({
-                name: name
-            });
-            await user.save();
-        }
+        const user = req.user
 
         // Verifica si el usuario ya tiene un carrito
         if (!user.cart) {
@@ -224,18 +213,7 @@ router.get('/facebook', passport.authenticate('facebook'));
 // Ruta de retorno después de la autenticación de Facebook
 router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const { name } = req.user;
-        // Verifica si el correo electrónico ya está asociado a un usuario existente
-        let user = await User.findOne({ name });
-        console.log(user)
-        if (!user) {
-            // Si el usuario no existe, crea uno nuevo con la información de Facebook
-            user = new User({
-                name: name
-            });
-            console.log('Entro', user)
-            await user.save();
-        }
+    const user = req.user
 
         // Verifica si el usuario ya tiene un carrito
         if (!user.cart) {
@@ -304,7 +282,6 @@ router.post('/login', async (req, res) => {
             sub: user.id,
             name: user.name,
             email: user.email,
-            name: user.name,
             role: user.role,
             cart: user.cart,
             favorite: user.favorite
@@ -321,41 +298,24 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register',passport.authenticate('registerAuth', { failureRedirect: '/api/auth/failregister' }), sendConfirmation('email', 'register'), async (req, res) => {
     try {
-        const { name, email, age, password } = req.body;
-        const user = await User.findOne({ email });
 
-        if (user) {
-            return res.status(400).json({
-                mensaje: "El usuario ya existe",
-                status: 400,
-            });
-        }
-
-        const newUser = new User({
-            name,
-            email,
-            age,
-            password: encryptPassword(password)
-        });
-
-        await newUser.save();
-
+        const user = req.user
         // Crea un nuevo carrito y lo vincula al usuario recién creado
-        const newCart = await cartController.createCart(newUser);
+        const newCart = await cartController.createCart(user);
 
         // Asigna la referencia del carrito al campo 'cart' del usuario
-        newUser.cart = newCart._id;
+        user.cart = newCart._id;
 
         // Crea un nuevo favorito y lo vincula al usuario recién creado
-        const newFavorite = await favoriteController.createFavorite(newUser);
+        const newFavorite = await favoriteController.createFavorite(user);
 
         // Asigna la referencia del favorito al campo 'favorite' del usuario
-        newUser.favorite = newFavorite._id;
+        user.favorite = newFavorite._id;
 
         // Guarda nuevamente el usuario con la referencia al carrito
-        await newUser.save();
+        await user.save();
 
         // Redirigir al usuario a la página de inicio de sesión (login) después de un registro exitoso
         return res.redirect('/login');

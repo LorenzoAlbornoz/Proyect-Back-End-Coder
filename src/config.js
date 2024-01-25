@@ -24,7 +24,9 @@ const config = {
     FACEBOOK_AUTH: {
         clientId: process.env.FACEBOOK_AUTH_CLIENT_ID,
         clientSecret: process.env.FACEBOOK_AUTH_CLIENT_SECRET
-    }
+    },
+    GOOGLE_APP_EMAIL: process.env.GOOGLE_APP_EMAIL,
+    GOOGLE_APP_PASS: process.env.GOOGLE_APP_PASS
 };
 
 export default config;
