@@ -10,7 +10,7 @@ import config from '../config.js'
 
 const initPassport = () => {
     // Función utilizada por la estrategia registerAuth
-    const verifyRegistration = async (req, username, password, done) => {
+    const verifyRegistration = async (req, email, password, done) => {
         try {
             const { name, email, age } = req.body
 
@@ -18,17 +18,17 @@ const initPassport = () => {
                 return done('Se requiere nombre, usuario y contraseña en el body', false)
             }
 
-            const user = await userModel.findOne({ email: username })
+            const user = await userModel.findOne({ email })
 
             // El usuario ya existe, llamamos a done() para terminar el proceso de
             // passport, con null (no hay error) y false (sin devolver datos de usuario)
             if (user) return done(null, false)
 
             const newUser = {
-                name,
                 email,
+                name,
                 age,
-                password: createHash(password)
+                password: encryptPassword(password)
             }
 
             const process = await userModel.create(newUser)
@@ -61,83 +61,82 @@ const initPassport = () => {
         }
     }
 
-    const verifyGithub = async (accessToken, refreshToken, profile, done) => {
-        try {
-            const user = await userModel.findOne({ username: profile.username });
-
-            if (!user) {
-                const newUser = {
-                    name: profile.displayName,
-                    email: profile.username,
-                    password: '',
-                    role: 'user'
-                };
-
-                const process = await userModel.create(newUser);
-
-                return done(null, process);
-            } else {
-                done(null, user);
-            }
-        } catch (err) {
-            return done(`Error passport Github: ${err.message}`);
-        }
-    };
-
     passport.use(new GoogleStrategy({
         clientID: config.GOOGLE_AUTH.clientId,
         clientSecret: config.GOOGLE_AUTH.clientSecret,
         callbackURL: "http://localhost:8080/api/googlecallback"
-      },
-      async function(accessToken, refreshToken, profile, done) {
-        try {
-          // Buscar o crear un usuario en tu base de datos
-          let user = await userModel.findOne({ googleId: profile.id });
+    },
+        async function (accessToken, refreshToken, profile, done) {
+            try {
+                // Buscar si ya existe un usuario con el mismo googleId
+                let user = await userModel.findOne({ googleId: profile.id });
     
-          if (!user) {
-            // Utiliza el nombre de Google como el nombre del usuario
-            const newUser = {
-              name: profile.displayName,
-              googleId: profile.id
-            };
+                if (user) {
+                    // Si el usuario ya existe, autenticar y devolver el usuario
+                    return done(null, user);
+                }
     
-            const process = await userModel.create(newUser);
+                // Si no existe, buscar si existe un usuario con el mismo nombre
+                let existingUser = await userModel.findOne({ name: profile.displayName });
     
-            // Llama a done con el usuario encontrado o creado
-            return done(null, process);
-          }
-        } catch (error) {
-          return done(error);
+                if (existingUser) {
+                    // Si el usuario con el mismo nombre ya existe, también autenticar y devolver el usuario existente
+                    return done(null, existingUser);
+                }
+    
+                // Si no existe ningún usuario, crea un nuevo usuario
+                const newUser = {
+                    name: profile.displayName,
+                    googleId: profile.id
+                };
+    
+                const createdUser = await userModel.create(newUser);
+    
+                // Devolver el nuevo usuario creado
+                return done(null, createdUser);
+            } catch (error) {
+                return done(error);
+            }
         }
-      }
     ));
-
+    
     passport.use(new FacebookStrategy({
         clientID: config.FACEBOOK_AUTH.clientId,
         clientSecret: config.FACEBOOK_AUTH.clientSecret,
         callbackURL: "http://localhost:8080/api/facebookcallback"
-      },
-      async function(accessToken, refreshToken, profile, done) {
-        try {
-          // Buscar o crear un usuario en tu base de datos
-          let user = await userModel.findOne({ facebookId: profile.id });
-    
-          if (!user) {
-            // Utiliza el nombre de Facebook como el nombre del usuario
-            const newUser = {
-              name: profile.displayName,
-              facebookId: profile.id
-            };
-    
-            const process = await userModel.create(newUser);
-    
-            // Llama a done con el usuario encontrado o creado
-            return done(null, process);
-          }
-        } catch (error) {
-          return done(error);
+    },
+        async function (accessToken, refreshToken, profile, done) {
+            try {
+                // Buscar si ya existe un usuario con el mismo nombre
+                let user = await userModel.findOne({ facebookId: profile.id });
+
+                if (user) {
+                    // Si el usuario ya existe, autenticar y devolver el usuario
+                    return done(null, user);
+                }
+
+                // Si no existe, buscar si existe un usuario con el mismo nombre
+                let existingUser = await userModel.findOne({ name: profile.displayName });
+
+                if (existingUser) {
+                    // Si el usuario con el mismo nombre ya existe, también autenticar y devolver el usuario existente
+                    return done(null, existingUser);
+                }
+
+                // Si no existe ningún usuario, crea un nuevo usuario
+                const newUser = {
+                    name: profile.displayName,
+                    facebookId: profile.id
+                };
+
+                const process = await userModel.create(newUser);
+
+                // Devolver el nuevo usuario creado
+                return done(null, process);
+            } catch (error) {
+                return done(error);
+            }
         }
-      }
     ));
 
     const verifyJwt = async (payload, done) => {
@@ -161,23 +160,16 @@ const initPassport = () => {
     // Creamos estrategia local de autenticación para registro
     passport.use('registerAuth', new LocalStrategy({
         passReqToCallback: true,
-        usernameField: 'username',
+        usernameField: 'name',
         passwordField: 'password'
     }, verifyRegistration))
 
     // Creamos estrategia local de autenticación para restauración de clave
     passport.use('restoreAuth', new LocalStrategy({
         passReqToCallback: true,
-        usernameField: 'username',
+        usernameField: 'name',
         passwordField: 'password'
     }, verifyRestoration))
-
-    // Creamos estrategia para autenticación externa con Github
-    passport.use('githubAuth', new GithubStrategy({
-        clientID: config.GITHUB_AUTH.clientId,
-        clientSecret: config.GITHUB_AUTH.clientSecret,
-        callbackURL: 'http://localhost:8080/api/githubcallback'
-    }, verifyGithub))
 
     // Estrategia para autenticación con JWT
     passport.use('jwtAuth', new jwt.Strategy({
