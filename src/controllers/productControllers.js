@@ -1,34 +1,30 @@
-import productModel from '../models/productSchema.js'
-import mongoose from 'mongoose';
+import { ProductService } from "../services/products.mongo.dao.js"
+
+const productService = new ProductService();
 
 export class ProductController {
     constructor() {
     }
-
+    
+    async getProducts() {
+        try {
+            return await productService.getProducts()
+        } catch (err) {
+            return err.message
+        }
+    }
+    
+    async getProductById(id) {
+        try {
+            return await productService.getProductById(id)
+        } catch (err) {
+            return err.message
+        }
+    }
 
     async addProduct(product) {
         try {
-            await productModel.create(product)
-            return "Producto agregado"
-        } catch (err) {
-            return err.message
-        }
-    }
-
-    async getProducts() {
-        try {
-            const products = await productModel.find().lean()
-            return products
-        } catch (err) {
-            return err.message
-        }
-
-    }
-
-    async getProductById(productId) {
-        try {
-            const product = await productModel.findById(productId)
-            return product === null ? 'No se encuentra el producto' : product
+            return await productService.addProduct(product);
         } catch (err) {
             return err.message
         }
@@ -36,8 +32,7 @@ export class ProductController {
 
     async updateProduct(id, newContent) {
         try {
-            const procedure = await productModel.findByIdAndUpdate(id, newContent)
-            return procedure
+            return await productService.updateProduct(id, newContent)
         } catch (err) {
             return err.message
         }
@@ -45,8 +40,7 @@ export class ProductController {
 
     async deleteProduct(id) {
         try {
-            const procedure = await productModel.findByIdAndDelete(id)
-            return procedure
+            return await productService.deleteProduct(id)
         } catch (err) {
             return err.message
         }
@@ -54,7 +48,7 @@ export class ProductController {
 
     async paginate(filter, options) {
         try {
-            return await productModel.paginate(filter, options);
+            return await productService.paginate(filter, options);
         } catch (err) {
             return err.message;
         }
