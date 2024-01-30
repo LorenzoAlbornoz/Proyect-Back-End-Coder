@@ -19,16 +19,6 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
-router.post('/cart', async (req, res) => {
-  try {
-    const newCart = await controller.createCart();
-    res.status(201).json({ data: newCart });
-  } catch (error) {
-    console.error('Error al crear el carrito:', error);
-    res.status(500).json({ error: 'Error al crear el carrito' });
-  }
-});
-
 router.post('/cart/:cid/product/:pid', async (req, res) => {
   const cartId = req.params.cid;
   const productId = req.params.pid;
@@ -75,11 +65,5 @@ router.delete('/cart/:cid/product/:pid', async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
   }
 });
-
-router.delete('/cart/:id', async (req, res) => {
-  const { id } = req.params;
-  const cart = await controller.deleteCart(id);
-  res.status(200).send({ status: 'OK', data: cart })
-})
 
 export default router

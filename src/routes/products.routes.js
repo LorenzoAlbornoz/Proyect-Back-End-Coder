@@ -7,14 +7,21 @@ const router = Router()
 const controller = new ProductController()
 
 router.get('/products', async (req, res) => {
-  const products = await controller.getProducts()
-  res.status(200).send({ status: 'OK', data: products })
+  try {
+    const products = await controller.getProducts()
+    res.status(200).send({ status: 'OK', data: products })
+  } catch (err) {
+    res.status(500).send({ status: "ERR", data: err.message });
+  }
 })
 
 router.get('/product/:id', async (req, res) => {
-    const { id } = req.params;
-    const product = await controller.getProductById(id);
-    res.status(200).send({ status: 'OK', data: product })
+  try{
+  const product = await controller.getProductById(req.params.id);
+  res.status(200).send({ status: 'OK', data: product })
+} catch (err) {
+  res.status(500).send({ status: "ERR", data: err.message });
+}
 })
 
 router.post('/product', uploader.single('image'), async (req, res) => {
@@ -40,8 +47,7 @@ router.post('/product', uploader.single('image'), async (req, res) => {
 
     const result = await controller.addProduct(newContent);
     res.status(200).send({ status: 'OK', data: result });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
     res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
   }
 });
@@ -77,11 +83,14 @@ router.put('/product/:id', uploader.single('image'), async (req, res) => {
   }
 });
 
-    router.delete('/product/:id', async (req, res) => {
-    const { id } = req.params;
-    const product = await controller.deleteProduct(id);
-    res.status(200).send({ status: 'OK', data: product })
-    })
+router.delete('/product/:id', async (req, res) => {
+  try{
+  const product = await controller.deleteProduct(req.params.id);
+  res.status(200).send({ status: 'OK', data: product })
+} catch (err) {
+  res.status(500).send({ status: "ERR", data: err.message });
+}
+})
 
 export default router
 
