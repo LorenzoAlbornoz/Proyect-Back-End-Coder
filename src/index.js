@@ -9,7 +9,6 @@ import MongoStore from 'connect-mongo'
 import passport from 'passport'
 
 import { __dirname } from './utils.js'
-import mongoDBConnection from './database/db.js'
 import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
@@ -17,6 +16,7 @@ import viewsRouter from './routes/views.routes.js'
 import favoriteRouter from './routes/favorite.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
 import usersRouter from './routes/users.routes.js';
+import MongoSingleton from './services/mongo.singleton.js'
 
 
 import config from './config.js'
@@ -67,11 +67,20 @@ app.use(config.API, favoriteRouter)
 
 app.use('/static', express.static(`${__dirname}/public`))
 
+app.use((err, req, res, next) => {
+  const code = err.code || 500;
+  res.status(code).send({ status: 'ERR', data: err.message });
+});
+
+app.all('*', (req,res,next)=>{
+   res.status(404).send({status: 'ERR', data: 'Página no encontrada'})
+})
+
 const port = config.PORT
 
-mongoDBConnection()
+MongoSingleton.getInstance();
 
 app.listen(port, () => {
-    console.log(`mi servidor esta funcionando en el puerto ${port}`)
+    console.log(`Backend activo puerto ${port}`)
 })
 
