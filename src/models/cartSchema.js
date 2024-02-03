@@ -29,6 +29,10 @@ const cartSchema = new mongoose.Schema({
   },
 });
 
+cartSchema.pre('find', function() {
+  this.populate({ path: 'products', model: Product })
+})
+
 // Método para calcular el total del carrito (precio total)
 cartSchema.methods.calculateTotal = async function () {
   try {
@@ -40,7 +44,8 @@ cartSchema.methods.calculateTotal = async function () {
     this.products.forEach((item) => {
       const product = products.find((p) => p._id.toString() === item.product.toString());
 
-      if (product) {
+      if (product && product.stock > 0) {
+        // Solo sumar si el producto tiene stock positivo
         total += product.price * item.quantity;
       }
     });

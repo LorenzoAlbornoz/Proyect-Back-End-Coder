@@ -8,13 +8,16 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Agrega la referencia a Bootstrap -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    integrity="sha384-TMmyQwF/p3p1zj3SdA8JQU0fG7h1F1wTqep9SQQx1CwtXJjtjs2BPLFvQ8gCqCs"
-    crossorigin="anonymous">
+    integrity="sha384-TMmyQwF/p3p1zj3SdA8JQU0fG7h1F1wTqep9SQQx1CwtXJjtjs2BPLFvQ8gCqCs" crossorigin="anonymous">
 </head>
 
 <body>
- <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc" class="btn btn-info" style="margin-top: 10px;">Seguir Comprando</a>
+  <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc" class="btn btn-info"
+    style="margin-top: 10px;">Seguir Comprando</a>
+
   {{#with cart}}
+  <button onclick="processPurchase('{{userId}}')" class="btn btn-success" style="margin-top: 10px; margin-left: 10px;">Finalizar
+    Compra</button>
   <h1>Carrito de Compras</h1>
   <p>Total del Carrito: ${{total}}</p>
   <p>Cantidad Total de Productos: {{totalQuantity}}</p>
@@ -26,9 +29,10 @@
       <p>Cantidad: {{this.quantity}}</p>
       <label for="quantity">Nueva Cantidad:</label>
       <input type="number" name="quantity" value="{{this.quantity}}" min="1" id="quantity-{{this._id}}">
-      <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')" class="btn btn-warning">Actualizar Cantidad</button>
-      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')"
-        class="btn btn-danger">Eliminar del carrito</button>
+      <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')" class="btn btn-warning">Actualizar
+        Cantidad</button>
+      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')" class="btn btn-danger">Eliminar del
+        carrito</button>
     </div>
     {{/each}}
   </div>
@@ -85,27 +89,68 @@
         }
       });
     }
+ const deleteProductFromCart = async (cartId, productId) => {
+    try {
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "No podrás revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#F8A126",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, eliminar!",
+        cancelButtonText: "Cancelar",
+      });
 
-    const deleteProductFromCart = async (cartId, productId) => {
-      try {
-        const result = await Swal.fire({
-          title: "¿Estás seguro?",
-          text: "No podrás revertir esto!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#F8A126",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Sí, eliminar!",
-          cancelButtonText: "Cancelar",
-        });
-
-        if (result.isConfirmed) {
-          await axios.delete(`/cart/${cartId}/product/${productId}`);
-        }
-      } catch (error) {
-        console.log(error);
+      if (result.isConfirmed) {
+        await axios.delete(`/cart/${cartId}/product/${productId}`);
       }
-    };
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  function processPurchase(userId) {
+   
+    // Usar SweetAlert para confirmar la compra
+    Swal.fire({
+      title: "¿Finalizar Compra?",
+      text: "¿Deseas finalizar la compra?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745", // Cambiado a verde para indicar compra
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, finalizar compra",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Usar Axios para enviar la solicitud de compra con el método POST
+          const response = await axios.post(`/cart/${userId}/purchase`);
+          
+          // Manejar la respuesta si es necesario
+          console.log(response.data);
+
+          // Mostrar una alerta indicando que la compra se ha realizado
+          Swal.fire({
+            icon: 'success',
+            title: '¡Compra realizada!',
+            text: `Compra procesada exitosamente. Ticket ID: ${response.data.data.ticketId}`,
+          }); 
+        } catch (error) {
+          // Manejar errores si es necesario
+          console.error(error);
+
+          // Mostrar una alerta indicando que ha ocurrido un error
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Hubo un error al procesar la compra',
+          });
+        }
+      }
+    });
+  }
   </script>
 </body>
 
