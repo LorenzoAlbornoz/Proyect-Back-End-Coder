@@ -5,7 +5,9 @@ export default class MongoSingleton {
     static #instance;
 
     constructor() {
-        mongoose.connect(config.MONGODB_CONNECTION);
+        mongoose.connect(config.MONGODB_CONNECTION, {
+            dbName: "Cluster-Coder"
+        });
     }
 
     static getInstance() {

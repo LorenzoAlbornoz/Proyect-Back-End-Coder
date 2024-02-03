@@ -19,6 +19,14 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
+// router.get('/:cid/purchase', async (req, res) => {
+//   try {
+//     res.status(200).send({status:})
+//   } catch (error) {
+    
+//   }
+// })
+
 router.post('/cart/:cid/product/:pid', async (req, res) => {
   const cartId = req.params.cid;
   const productId = req.params.pid;
@@ -28,24 +36,6 @@ router.post('/cart/:cid/product/:pid', async (req, res) => {
     res.status(201).json({ data: addProductResult });
   } else {
     res.status(500).json({ error: 'Error al agregar el producto' });
-  }
-});
-
-router.put('/cart/:cid/product/:pid', async (req, res) => {
-  const cartId = req.params.cid;
-  const productId = req.params.pid;
-  const newQuantity = req.body.quantity; // Asegúrate de enviar la nueva cantidad en el cuerpo de la solicitud
-
-  try {
-    const updatedCart = await controller.editProductQuantity(cartId, productId, newQuantity);
-
-    if (updatedCart !== null) {
-      res.status(200).json({ data: updatedCart });
-    } else {
-      res.status(404).json({ error: 'El producto no está en el carrito' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
   }
 });
 

@@ -4,7 +4,7 @@ import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { encryptPassword, comparePassword, generateToken, passportCall, authToken, sendConfirmation } from '../utils.js';
+import { encryptPassword, comparePassword, generateToken, passportCall, authToken, sendConfirmation, handlePolicies } from '../utils.js';
 import initPassport from '../config/passport.config.js';
 
 initPassport()
@@ -45,29 +45,15 @@ const authorizationMid = role => {
     }
 }
 
-// Nuevo middleware para manejo de políticas (roles)
-// que nos permite indicar en el endpoint un array de roles válidos, no solo uno.
-const handlePolicies = policies => {
-    return async (req, res, next) => {
-        if (!req.user) return res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
-
-        // Normalizamos todo a mayúsculas para comparar efectivamente
-        const userRole = req.user.role.toUpperCase();
-        policies.forEach((policy, index) => policies[index] = policies[index].toUpperCase());
-
-        if (policies.includes('PUBLIC')) return next();
-        if (policies.includes(userRole)) return next();
-        res.status(403).send({ status: 'ERR', data: 'Sin permisos suficientes' });
-    }
-}
-
 router.get('/current', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
     if (req.user) {
-        res.status(200).send({ status: 'OK', data: req.user });
+        const userDTO = userController.createUserDTO(req.user);
+        res.status(200).send({ status: 'OK', data: userDTO });
     } else {
         res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' });
     }
 });
+
 router.get('/logout', async (req, res) => {
     try {
         res.clearCookie('codertoken');
@@ -255,12 +241,10 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
     }
 });
 
-// Nuestro primer endpoint de login!, básico por el momento, con algunas
-// validacione "hardcodeadas", pero nos permite comenzar a entender los conceptos.router.post('/login', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-
+        
         const user = await User.findOne({ email });
 
         if (!user) {

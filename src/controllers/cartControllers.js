@@ -62,4 +62,15 @@ export class CartController {
       return err.message
     }
   }
+
+  async processPurchase(cardId){
+    try {
+      return await cartService.CartController(cardId)
+    } catch (err) {
+      return err.message
+    }
+  }
+
+ 
+
 }

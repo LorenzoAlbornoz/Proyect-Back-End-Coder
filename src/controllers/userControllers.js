@@ -15,7 +15,7 @@ export class UserController {
 
     async getUserByID(id) {
         try {
-         return await userService.getUserByID(id)
+            return await userService.getUserByID(id)
         } catch (err) {
             return err.message
         }
@@ -23,7 +23,7 @@ export class UserController {
 
     async deleteUser(userId) {
         try {
-          return await userService.deleteUser(userId)
+            return await userService.deleteUser(userId)
         } catch (err) {
             return err.message
         }
@@ -31,7 +31,7 @@ export class UserController {
 
     async updateUser(id, name, username, password) {
         try {
-         return await userService.updateUser(id, name, username, password)
+            return await userService.updateUser(id, name, username, password)
         } catch (err) {
             return err.message
         }
@@ -39,9 +39,18 @@ export class UserController {
 
     async getUsersPaginated(page, limit) {
         try {
-         return await userService.getUsersPaginated(page,limit)
+            return await userService.getUsersPaginated(page, limit)
         } catch (err) {
             return err.message
         }
+    }
+
+    createUserDTO(user) {
+        return {
+            id: user.sub,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        };
     }
 }

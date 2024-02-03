@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import User from './userSchema'
+import User from './userSchema.js'
 
 mongoose.pluralize(null)
 
