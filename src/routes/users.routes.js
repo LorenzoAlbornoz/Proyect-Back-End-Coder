@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { UserController } from '../controllers/userControllers.js'
-import { handlePolicies, authToken } from '../utils.js'
+import { authToken } from '../utils.js'
+import handlePolicies from '../config/policies.auth.js'
 
 const router = Router()
 const userController = new UserController()

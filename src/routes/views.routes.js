@@ -4,8 +4,9 @@ import { ProductController } from '../controllers/productControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { UserController } from '../controllers/userControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { authToken, handlePolicies } from '../utils.js';
+import { authToken } from '../utils.js';
 import config from '../config.js';
+import handlePolicies from '../config/policies.auth.js';
 
 const router = Router();
 const productController = new ProductController();

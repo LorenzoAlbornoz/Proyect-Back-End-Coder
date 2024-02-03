@@ -4,46 +4,15 @@ import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { encryptPassword, comparePassword, generateToken, passportCall, authToken, sendConfirmation, handlePolicies } from '../utils.js';
+import { comparePassword, generateToken, passportCall, authToken, sendConfirmation} from '../utils.js';
 import initPassport from '../config/passport.config.js';
+import handlePolicies from '../config/policies.auth.js';
 
 initPassport()
 const router = Router();
 const userController = new UserController();
 const cartController = new CartController();
 const favoriteController = new FavoriteController();
-
-
-// Creamos un pequeño middleware para una autorización básica
-// Observar que aparece next, además de req y res.
-// next nos permite continuar la secuencia de la "cadena".
-// En este caso, si el usuario es admin, llamanos a next, caso contrario
-// devolvemos un error 403 (Forbidden), no se puede acceder al recurso.
-// Si ni siquiera se dispone de req.session.user, directamente devolvemos error
-// de no autorizado.
-const authenticationMid = (req, res, next) => {
-    try {
-        if (req.session.user) {
-            if (req.session.user.admin === true) {
-                next()
-            } else {
-                res.status(403).send({ status: 'ERR', data: 'Usuario no admin' })
-            }
-        } else {
-            res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
-        }
-    } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
-    }
-}
-
-const authorizationMid = role => {
-    return async (req, res, next) => {
-        if (!req.user) return res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
-        if (req.user.role !== role) return res.status(403).send({ status: 'ERR', data: 'Sin permisos suficientes' })
-        next();
-    }
-}
 
 router.get('/current', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
     if (req.user) {
@@ -75,12 +44,6 @@ router.get('/logout', async (req, res) => {
         res.status(500).send({ status: 'ERR', data: err.message })
     }
 })
-
-// Este es un endpoint "privado", solo visible para admin.
-// Podemos ver que el contenido no realiza ninguna verificación, ya que la misma se hace
-// inyectando el middleware auth en la cadena (ver definición auth arriba).
-// Si todo va bien en auth, se llamará a next() y se continuará hasta aquí, caso contrario
-// la misma rutina en auth() cortará y retornará la respuesta con el error correspondiente.
 
 router.get('/admin', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
     try {
@@ -313,11 +276,6 @@ router.post('/register',passport.authenticate('registerAuth', { failureRedirect:
         });
     }
 });
-
-// router.get('/current', passport.authenticate('jwtAuth', { session: false }), async (req, res) => {
-// La función passportCall nos permite una mejor intercepción de errores (ver utils.js)
-// Este endpoint muestra cómo podemos encadenar distintos middlewares en el proceso,
-// aquí primero autenticamos y luego autorizamos.
 
 router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
     try {

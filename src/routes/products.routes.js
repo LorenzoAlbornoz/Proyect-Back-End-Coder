@@ -2,7 +2,9 @@ import { Router } from 'express'
 import { uploader } from '../uploader.js'
 import { ProductController } from '../controllers/productControllers.js'
 import cloudinary from 'cloudinary'
-import { handlePolicies, authToken } from '../utils.js'
+import {authToken } from '../utils.js'
+import handlePolicies from '../config/policies.auth.js'
+
 
 
 const router = Router()
