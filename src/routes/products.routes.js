@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { uploader } from '../uploader.js'
 import { ProductController } from '../controllers/productControllers.js'
 import cloudinary from 'cloudinary'
+import { handlePolicies, authToken } from '../utils.js'
+
 
 const router = Router()
 const controller = new ProductController()
@@ -24,7 +26,7 @@ router.get('/product/:id', async (req, res) => {
 }
 })
 
-router.post('/product', uploader.single('image'), async (req, res) => {
+router.post('/product',authToken ,handlePolicies(['admin']) ,uploader.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).send({ status: 'FIL', data: 'No se pudo subir el archivo' });
 
@@ -52,7 +54,7 @@ router.post('/product', uploader.single('image'), async (req, res) => {
   }
 });
 
-router.put('/product/:id', uploader.single('image'), async (req, res) => {
+router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
     if (!req.file) return res.status(400).send({ status: 'FIL', data: 'No se pudo subir el archivo' });
@@ -83,7 +85,7 @@ router.put('/product/:id', uploader.single('image'), async (req, res) => {
   }
 });
 
-router.delete('/product/:id', async (req, res) => {
+router.delete('/product/:id',authToken ,handlePolicies(['admin']) ,async (req, res) => {
   try{
   const product = await controller.deleteProduct(req.params.id);
   res.status(200).send({ status: 'OK', data: product })

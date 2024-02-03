@@ -3,21 +3,29 @@
   <h1>{{title}}</h1>
   <div style="display: flex; align-items: center; margin-left: auto;">
     {{#if name}}
-    <p style="color: #F8A126; margin-right: 10px; margin-bottom: 0;">¡Bienvenido, {{name}}!</p>
+      <!-- Usuario autenticado: Mostrar mensaje de bienvenida y botón de cerrar sesión -->
+      <p style="color: #F8A126; margin-right: 10px; margin-bottom: 0;">¡Bienvenido, {{name}}!</p>
+      <form action="/api/logout" method="get">
+        <button type="submit" class="btn btn-success" style="margin-bottom: 10px; margin-right: 10px;">Cerrar Sesión</button>
+      </form>
+    {{else}}
+      <!-- Usuario no autenticado: Mostrar icono de usuario que redirige a /login -->
+      <a href="/login" style="text-decoration: none; margin-right: 10px;">
+        <i class="fas fa-user" style="color: #000; font-size: 20px;"></i>
+      </a>
     {{/if}}
-    <form action="/api/logout" method="get">
-      <button type="submit" class="btn btn-success" style="margin-bottom: 10px;">Cerrar Sesión</button>
-    </form>
+
     <!-- Icono de carrito y cantidad -->
     {{#if cart}}
-    <form id="cartForm" action="/cart/{{cart}}" method="get">
-      <button type="submit" class="btn btn-info" style="margin-bottom: 10px; margin-left: 10px;">
-        <i class="fas fa-shopping-cart"></i> <span id="cartQuantity">{{cart.totalQuantity}}</span>
-      </button>
-    </form>
+      <form id="cartForm" action="/cart/{{cart}}" method="get">
+        <button type="submit" class="btn btn-info" style="margin-bottom: 10px;">
+          <i class="fas fa-shopping-cart"></i> <span id="cartQuantity">{{cart.totalQuantity}}</span>
+        </button>
+      </form>
     {{/if}}
   </div>
 </div>
+
 
 <!-- Listado de productos -->
 <div class="row">
@@ -118,6 +126,21 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.addToCartBtn').forEach(button => {
       button.addEventListener('click', function (event) {
         event.preventDefault();
+        
+        // Verificar si el usuario está autenticado
+        const isUserAuthenticated = {{#if name}}true{{else}}false{{/if}};
+        
+        if (!isUserAuthenticated) {
+          // Mostrar SweetAlert indicando que el usuario debe estar autenticado
+          Swal.fire({
+            title: "Inicia sesión para agregar al carrito",
+            text: "Debes iniciar sesión para agregar productos al carrito.",
+            icon: "warning",
+            confirmButtonColor: "#F8A126",
+          });
+          return;
+        }
+
         const productId = this.getAttribute('data-product-id');
         const cartId = document.getElementById('cartForm').getAttribute('action').split('/').pop();
 
@@ -148,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 </script>
+
 
 <script>
   function updateCartQuantity(cartId) {

@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { UserController } from '../controllers/userControllers.js'
+import { handlePolicies, authToken } from '../utils.js'
 
 const router = Router()
 const userController = new UserController()
 
-router.post('/user/:userId/product/:productId', async (req, res) => {
+router.post('/user/:userId/product/:productId',authToken ,handlePolicies(['admin']) , async (req, res) => {
     const userId = req.params.userId;
     const productId = req.params.productId;
   
@@ -14,7 +15,7 @@ router.post('/user/:userId/product/:productId', async (req, res) => {
     res.status(addProductResult.status).json({ mensaje: addProductResult.mensaje });
   });
   
-  router.delete('/user/:userId', async (req, res) => {
+  router.delete('/user/:userId',authToken ,handlePolicies(['admin']) , async (req, res) => {
     const {userId} = req.params;
 
     try {
