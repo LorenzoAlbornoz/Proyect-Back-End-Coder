@@ -73,13 +73,35 @@ router.get('/products-views', async (req, res) => {
 
 router.get('/cart/:cid', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
   try {
-    const cartId = req.params.cid;
-    const cart = await cartController.getCartById(cartId);
+    let userId, name, cart;
 
-    if (cart) {
-      res.render('cart', { title: 'Carrito de Compras', cart });
+    // Verificar si hay un token presente
+    const token = req.cookies.codertoken;
+    if (token) {
+      // Si hay un token, decodificarlo y obtener la información del usuario
+      const decoded = jwt.verify(token, config.PRIVATE_KEY);
+      userId = decoded.sub;
+      name = decoded.name;
+      cart = decoded.cart;
+    }
+
+    if (userId) {
+      // Obtener el carrito del usuario utilizando el ID del carrito
+      const cartId = req.params.cid;
+      const cart = await cartController.getCartById(cartId);
+      
+      if (cart) {
+        res.render('cart', {
+          title: 'Carrito de Compras',
+          userId: userId || null,
+          name: name || null,
+          cart: cart || null,
+        });
+      } else {
+        res.status(404).render('error', { message: 'Carrito no encontrado' });
+      }
     } else {
-      res.status(404).render('error', { message: 'Carrito no encontrado' });
+      res.status(401).render('error', { message: 'Usuario no autenticado' });
     }
   } catch (error) {
     console.error(error);

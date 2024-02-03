@@ -19,13 +19,19 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
-// router.get('/:cid/purchase', async (req, res) => {
-//   try {
-//     res.status(200).send({status:})
-//   } catch (error) {
-    
-//   }
-// })
+router.post('/cart/:userId/purchase', async (req, res) => {
+  try {
+    const result = await controller.processPurchase(req.params.userId); 
+    if (result.status === 'OK') {
+      res.status(200).send(result);
+    } else {
+      res.status(500).send(result);
+    }
+  } catch (err) {
+    res.status(500).send({ status: 'ERR', data: err.message });
+  }
+});
+
 
 router.post('/cart/:cid/product/:pid', async (req, res) => {
   const cartId = req.params.cid;

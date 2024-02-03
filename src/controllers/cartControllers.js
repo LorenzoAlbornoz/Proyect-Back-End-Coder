@@ -63,14 +63,17 @@ export class CartController {
     }
   }
 
-  async processPurchase(cardId){
+  async processPurchase(userId){
     try {
-      return await cartService.CartController(cardId)
-    } catch (err) {
-      return err.message
+      const result = await cartService.processPurchase(userId)
+      if (result.success) {
+        return { status: 'OK', data: { ticketId: result.ticketId } };
+      } else {
+        return { status: 'ERR', data: { error: result.error } };
+      }
+    } catch (error) {
+      console.error("Error in processPurchase:", error);
+      return { status: 'ERR', data: { error: error.message } };
     }
   }
-
- 
-
 }
