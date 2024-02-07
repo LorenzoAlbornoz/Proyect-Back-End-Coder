@@ -19,9 +19,9 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
-router.post('/cart/:userId/purchase', async (req, res) => {
+router.post('/cart/:id/purchase', async (req, res) => {
   try {
-    const result = await controller.processPurchase(req.params.userId); 
+    const result = await controller.processPurchase(req.params.id); 
     if (result.status === 'OK') {
       res.status(200).send(result);
     } else {

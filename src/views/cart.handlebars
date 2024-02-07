@@ -15,9 +15,16 @@
   <a href="http://localhost:8080/products-views?limit=5&page=1&sort=asc" class="btn btn-info"
     style="margin-top: 10px;">Seguir Comprando</a>
 
+  {{#if cart}}
+  <form id="cartForm" action="/api/cart/{{userId}}/purchase" method="post"
+    onsubmit="return confirmPurchase(event)" data-cart-id="{{cart._id}}">
+    <button type="submit" class="btn btn-success" style="margin-bottom: 10px;">
+      <i>Finalizar Compra</i> <span id="cartQuantity">{{cart.totalQuantity}}</span>
+    </button>
+  </form>
+  {{/if}}
+
   {{#with cart}}
-  <button onclick="processPurchase('{{userId}}')" class="btn btn-success" style="margin-top: 10px; margin-left: 10px;">Finalizar
-    Compra</button>
   <h1>Carrito de Compras</h1>
   <p>Total del Carrito: ${{total}}</p>
   <p>Cantidad Total de Productos: {{totalQuantity}}</p>
@@ -31,8 +38,9 @@
       <input type="number" name="quantity" value="{{this.quantity}}" min="1" id="quantity-{{this._id}}">
       <button onclick="updateQuantity('{{../_id}}', '{{this._id}}')" class="btn btn-warning">Actualizar
         Cantidad</button>
-      <button onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')" class="btn btn-danger">Eliminar del
-        carrito</button>
+      <button
+        onclick="deleteProductFromCart('{{../_id}}', '{{this.product._id}}')"
+        class="btn btn-danger">Eliminar del carrito</button>
     </div>
     {{/each}}
   </div>
@@ -44,113 +52,88 @@
 
   <!-- Script para manejar las operaciones con eventos de clic -->
   <script>
-    function updateQuantity(cartId, productId) {
+    async function updateQuantity(cartId, productId) {
       const newQuantity = document.getElementById(`quantity-${productId}`).value;
 
       console.log("Cart ID:", cartId);
       console.log("Product ID:", productId);
       console.log("New Quantity:", newQuantity);
 
-      // Usar SweetAlert para confirmar la actualización
-      Swal.fire({
-        title: "¿Actualizar cantidad?",
-        text: "¿Deseas cambiar la cantidad de este producto?",
+      try {
+        // Usar Axios para enviar la solicitud de actualización con el método PUT
+        const response = await axios.put(`/cart/${cartId}/product/${productId}`, { quantity: newQuantity });
+
+        // Mostrar una alerta indicando que la cantidad se ha actualizado
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Cantidad del producto actualizada exitosamente',
+        });
+
+        // Actualizar la cantidad en la vista si es necesario
+        // (opcional dependiendo de tu implementación)
+        // ...
+
+      } catch (error) {
+        // Manejar errores si es necesario
+        console.error(error);
+        // Mostrar una alerta indicando que ha ocurrido un error
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un error al actualizar la cantidad del producto',
+        });
+      }
+    }
+
+    const deleteProductFromCart = async (cartId, productId) => {
+      try {
+        const result = await Swal.fire({
+          title: "¿Estás seguro?",
+          text: "No podrás revertir esto!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#F8A126",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, eliminar!",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (result.isConfirmed) {
+          await axios.delete(`/cart/${cartId}/product/${productId}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    async function confirmPurchase(event) {
+      // Prevenir el envío predeterminado del formulario
+      event.preventDefault();
+
+      // Obtener el formulario
+      const form = document.getElementById("cartForm");
+
+      // Obtener el cartId desde el formulario
+      const cartId = form.getAttribute("data-cart-id");
+
+      // Usar SweetAlert para confirmar la compra
+      const result = await Swal.fire({
+        title: "¿Finalizar Compra?",
+        text: "¿Deseas finalizar la compra?",
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#F8A126",
+        confirmButtonColor: "#28a745", // Cambiado a verde para indicar compra
         cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, actualizar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Usar Axios para enviar la solicitud de actualización con el método PUT
-          axios.put(`/cart/${cartId}/product/${productId}`, { quantity: newQuantity })
-            .then(response => {
-              // Manejar la respuesta si es necesario
-              console.log(response.data);
-
-              // Mostrar una alerta indicando que la cantidad se ha actualizado
-              Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Cantidad del producto actualizada exitosamente',
-              });
-            })
-            .catch(error => {
-              // Manejar errores si es necesario
-              console.error(error);
-              // Mostrar una alerta indicando que ha ocurrido un error
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Hubo un error al actualizar la cantidad del producto',
-              });
-            });
-        }
-      });
-    }
- const deleteProductFromCart = async (cartId, productId) => {
-    try {
-      const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "No podrás revertir esto!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#F8A126",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, eliminar!",
+        confirmButtonText: "Sí, finalizar compra",
         cancelButtonText: "Cancelar",
       });
 
+      // Enviar el formulario solo si el usuario confirma
       if (result.isConfirmed) {
-        await axios.delete(`/cart/${cartId}/product/${productId}`);
+        form.submit();
       }
-    } catch (error) {
-      console.log(error);
     }
-  };
-
-  function processPurchase(userId) {
-   
-    // Usar SweetAlert para confirmar la compra
-    Swal.fire({
-      title: "¿Finalizar Compra?",
-      text: "¿Deseas finalizar la compra?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#28a745", // Cambiado a verde para indicar compra
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, finalizar compra",
-      cancelButtonText: "Cancelar",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          // Usar Axios para enviar la solicitud de compra con el método POST
-          const response = await axios.post(`/cart/${userId}/purchase`);
-          
-          // Manejar la respuesta si es necesario
-          console.log(response.data);
-
-          // Mostrar una alerta indicando que la compra se ha realizado
-          Swal.fire({
-            icon: 'success',
-            title: '¡Compra realizada!',
-            text: `Compra procesada exitosamente. Ticket ID: ${response.data.data.ticketId}`,
-          }); 
-        } catch (error) {
-          // Manejar errores si es necesario
-          console.error(error);
-
-          // Mostrar una alerta indicando que ha ocurrido un error
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Hubo un error al procesar la compra',
-          });
-        }
-      }
-    });
-  }
   </script>
 </body>
 
