@@ -53,4 +53,12 @@ export class ProductController {
             return err.message;
         }
     }
+
+    async mockingProducts(qty){
+        try {
+            return await productService.mockingProducts(qty)
+        } catch (err) {
+            return err.message
+        }
+    }
 }
