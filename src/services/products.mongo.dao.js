@@ -1,5 +1,6 @@
 import productModel from '../models/productSchema.js'
 import cloudinary from 'cloudinary'
+import { faker } from '@faker-js/faker';
 
 export class ProductService {
     constructor() {
@@ -101,4 +102,31 @@ export class ProductService {
             return err.message;
         }
     }
+
+    async mockingProducts(qty) {
+        try {
+            const mockProducts = [];
+        
+            // Generar productos simulados
+            for (let i = 0; i < qty; i++) {
+                const products = {
+                    _id: faker.database.mongodbObjectId(),
+                    title: faker.commerce.productName(),
+                    description: faker.commerce.productDescription(),
+                    price: faker.commerce.price({ min: 1, max: 1000, precision: 0.01 }),
+                    category: faker.database.mongodbObjectId(), 
+                    image: faker.image.imageUrl(),
+                    code: faker.random.alphaNumeric(8),
+                    stock: faker.number.int({ min: 1, max: 100 }),
+                };
+                
+                mockProducts.push(products);
+            }
+        
+            return mockProducts;
+        } catch (err) {
+            return err.message;
+        }
+    }
+    
 }

@@ -93,5 +93,16 @@ router.delete('/product/:id',authToken ,handlePolicies(['admin']) ,async (req, r
 }
 })
 
+router.get('/mockingProducts/:qty([1-9]*)', async (req, res) => {
+  try{
+  const products = await controller.mockingProducts(req.params.qty);
+  res.status(200).send({status: 'OK', data: products})
+} catch (err) {
+  return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+}
+})
+
+
+
 export default router
 
