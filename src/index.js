@@ -72,8 +72,18 @@ app.use((err, req, res, next) => {
   res.status(code).send({ status: 'ERR', data: err.message });
 });
 
-app.all('*', (req,res,next)=>{
-   res.status(404).send({status: 'ERR', data: 'Página no encontrada'})
+    app.use((err, req, res, next) => {
+      const code = err.code || 500;
+      const message = err.message || 'Hubo un problema, error desconocido';
+      
+      return res.status(code).send({
+          status: 'ERR',
+          data: message,
+      });
+  });
+
+app.all('*', (req, res, next)=>{
+   res.status(404).send({status: 'ERR', data: config.errorsDictionary.PAGE_NOT_FOUND})
 })
 
 const port = config.PORT

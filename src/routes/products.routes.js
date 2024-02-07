@@ -4,8 +4,8 @@ import { ProductController } from '../controllers/productControllers.js'
 import cloudinary from 'cloudinary'
 import {authToken } from '../utils.js'
 import handlePolicies from '../config/policies.auth.js'
-
-
+import CustomError from '../services/error.custom.class.js'
+import config from '../config.js'
 
 const router = Router()
 const controller = new ProductController()
@@ -15,7 +15,7 @@ router.get('/products', async (req, res) => {
     const products = await controller.getProducts()
     res.status(200).send({ status: 'OK', data: products })
   } catch (err) {
-    res.status(500).send({ status: "ERR", data: err.message });
+    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 })
 
@@ -24,17 +24,17 @@ router.get('/product/:id', async (req, res) => {
   const product = await controller.getProductById(req.params.id);
   res.status(200).send({ status: 'OK', data: product })
 } catch (err) {
-  res.status(500).send({ status: "ERR", data: err.message });
+  return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
 }
 })
 
-router.post('/product',authToken ,handlePolicies(['admin']) ,uploader.single('image'), async (req, res) => {
+router.post('/product', authToken, handlePolicies(['admin']), uploader.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).send({ status: 'FIL', data: 'No se pudo subir el archivo' });
 
     const { title, description, price, code, stock } = req.body;
     if (!title || !description || !price || !code || !stock) {
-      return res.status(400).send({ status: 'ERR', data: 'Faltan campos obligatorios' });
+      return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
     }
 
     // Cloudinary upload
@@ -44,17 +44,15 @@ router.post('/product',authToken ,handlePolicies(['admin']) ,uploader.single('im
       title,
       description,
       price,
-      image: cloudImg.secure_url, // Usa la URL segura proporcionada por Cloudinary
+      image: cloudImg.secure_url,
       code,
       stock,
     };
-
-    const result = await controller.addProduct(newContent);
-    res.status(200).send({ status: 'OK', data: result });
   } catch (err) {
-    res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
+    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 });
+
 
 router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single('image'), async (req, res) => {
   try {
@@ -64,7 +62,7 @@ router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single(
     const { title, description, price, code, stock } = req.body;
 
     if (!title || !description || !price || !code || !stock) {
-      return res.status(400).send({ status: 'ERR', data: 'Faltan campos obligatorios' });
+      return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
     }
 
     // Cloudinary upload
@@ -82,8 +80,7 @@ router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single(
     const product = await controller.updateProduct(id, updatedProduct, { new: true });
     res.status(200).send({ status: 'OK', data: product });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
+    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 });
 
@@ -92,7 +89,7 @@ router.delete('/product/:id',authToken ,handlePolicies(['admin']) ,async (req, r
   const product = await controller.deleteProduct(req.params.id);
   res.status(200).send({ status: 'OK', data: product })
 } catch (err) {
-  res.status(500).send({ status: "ERR", data: err.message });
+  return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
 }
 })
 
