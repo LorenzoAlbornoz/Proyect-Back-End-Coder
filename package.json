@@ -14,6 +14,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
+    "commander": "^12.0.0",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -39,7 +40,8 @@
     "passport-local": "^1.0.0",
     "session-file-store": "^1.5.0",
     "socket.io": "^4.7.2",
-    "sweetalert2": "^11.10.1"
+    "sweetalert2": "^11.10.1",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.0"

@@ -17,7 +17,7 @@ import favoriteRouter from './routes/favorite.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
 import usersRouter from './routes/users.routes.js';
 import MongoSingleton from './services/mongo.singleton.js'
-
+import addLogger from './services/wiston.logger.js'
 
 import config from './config.js'
 
@@ -55,8 +55,9 @@ cloudinary.config({
     cloud_name:config.CLOUD_NAME,
     api_key:config.APY_KEY,
     api_secret: config.APY_SECRET
-});
+});3
 
+app.use(addLogger)
 app.use(config.API, cartsRouter);
 app.use(config.API, categoryRouter)
 app.use(config.API, productsRouter);
@@ -91,6 +92,6 @@ const port = config.PORT
 MongoSingleton.getInstance();
 
 app.listen(port, () => {
-    console.log(`Backend activo puerto ${port}`)
+    console.log(`Backend activo modo ${config.MODE} puerto ${port}`)
 })
 

@@ -1,6 +1,5 @@
 import passport from 'passport'
 import LocalStrategy from 'passport-local'
-import GithubStrategy from 'passport-github2'
 import GoogleStrategy from 'passport-google-oauth20'
 import FacebookStrategy from 'passport-facebook'
 import jwt from 'passport-jwt'

@@ -160,74 +160,74 @@ export class CartService {
     }
 
     async processPurchase(userId) {
-            try {
-                const user = await userModel.findById(userId);
-        
-                if (!user) {
-                    throw new Error('No se encuentra el usuario');
-                }
-        
-                const { cart: cartId } = user;
-                const cart = await cartModel.findById(cartId).populate('products.product');
-        
-                if (!cart) {
-                    throw new Error('No se encuentra el carrito');
-                }
-        
-                const ticketItems = [];
-                let totalAmount = 0;
-        
-                // Iterar sobre los productos del carrito
-                for (const cartProduct of cart.products) {
-                    const { product, quantity } = cartProduct;
-        
-                    if (quantity <= product.stock) {
-                        // Suficiente stock para la cantidad deseada
-                        const itemAmount = product.price * quantity;
-        
-                        ticketItems.push({ product: product._id, quantity, price: product.price });
-                        totalAmount += itemAmount;
-        
-                        // Descontar el stock utilizando quantity
-                        product.stock -= quantity;
-                        await product.save();
-                    } else {
-                        // Reducir el stock en la cantidad disponible en stock
-                        const remainingQuantity = product.stock;
-        
-                        const itemAmount = product.price * remainingQuantity;
-        
-                        ticketItems.push({ product: product._id, quantity: remainingQuantity, price: product.price });
-                        totalAmount += itemAmount;
-        
-                        // Descontar el stock utilizando remainingQuantity
-                        product.stock = 0;
-                        await product.save();
-        
-                        // Actualizar la cantidad en el carrito después de la compra
-                        cartProduct.quantity -= remainingQuantity;
-                    }
-                }
-        
-                // Filtrar los productos que no pudieron comprarse completamente
-                cart.products = cart.products.filter(cartProduct => {
-                    const { quantity } = cartProduct;
-                    return quantity > 0; // Incluir en el carrito si la cantidad es mayor que 0
-                });
-        
-                await cart.save();
-        
-                const ticket = await ticketModel.create({
-                    purchase_datetime: new Date(),
-                    amount: totalAmount,
-                    purchaser: user._id,
-                    items: ticketItems,
-                });
-        
-                return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket._id };
-            } catch (error) {
-                return { success: false, error: error.message };
+        try {
+            const user = await userModel.findById(userId);
+
+            if (!user) {
+                throw new Error('No se encuentra el usuario');
             }
+
+            const { cart: cartId } = user;
+            const cart = await cartModel.findById(cartId).populate('products.product');
+
+            if (!cart) {
+                throw new Error('No se encuentra el carrito');
+            }
+
+            const ticketItems = [];
+            let totalAmount = 0;
+
+            // Iterar sobre los productos del carrito
+            for (const cartProduct of cart.products) {
+                const { product, quantity } = cartProduct;
+
+                if (quantity <= product.stock) {
+                    // Suficiente stock para la cantidad deseada
+                    const itemAmount = product.price * quantity;
+
+                    ticketItems.push({ product: product._id, quantity, price: product.price });
+                    totalAmount += itemAmount;
+
+                    // Descontar el stock utilizando quantity
+                    product.stock -= quantity;
+                    await product.save();
+                } else {
+                    // Reducir el stock en la cantidad disponible en stock
+                    const remainingQuantity = product.stock;
+
+                    const itemAmount = product.price * remainingQuantity;
+
+                    ticketItems.push({ product: product._id, quantity: remainingQuantity, price: product.price });
+                    totalAmount += itemAmount;
+
+                    // Descontar el stock utilizando remainingQuantity
+                    product.stock = 0;
+                    await product.save();
+
+                    // Actualizar la cantidad en el carrito después de la compra
+                    cartProduct.quantity -= remainingQuantity;
+                }
+            }
+
+            // Filtrar los productos que no pudieron comprarse completamente
+            cart.products = cart.products.filter(cartProduct => {
+                const { quantity } = cartProduct;
+                return quantity > 0; // Incluir en el carrito si la cantidad es mayor que 0
+            });
+
+            await cart.save();
+
+            const ticket = await ticketModel.create({
+                purchase_datetime: new Date(),
+                amount: totalAmount,
+                purchaser: user._id,
+                items: ticketItems,
+            });
+
+            return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket._id };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-        
+    }
+
 }
