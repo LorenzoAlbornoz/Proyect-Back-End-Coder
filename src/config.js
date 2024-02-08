@@ -1,8 +1,26 @@
+import * as url from 'url';
 import dotenv from 'dotenv';
+import { Command } from 'commander';
 
-dotenv.config();
+const commandLineOptions = new Command();
+commandLineOptions
+    .option('--mode <mode>')
+    .option('--port <port>')
+commandLineOptions.parse();
+
+switch (commandLineOptions.opts().mode) {
+    case 'prod':
+        dotenv.config({ path: './.env.prod'});
+        break;
+    
+    case 'devel':
+    default:
+        dotenv.config({ path: './.env.devel'});
+}
 
 const config = {
+    __FILENAME: url.fileURLToPath(import.meta.url),
+    __DIRNAME: url.fileURLToPath(new URL('.', import.meta.url)),
     MONGODB_CONNECTION: process.env.MONGODB_CONNECTION,
     PORT: process.env.PORT,
     API: process.env.API,
@@ -13,6 +31,8 @@ const config = {
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     SECRET_KEY: process.env.SECRET_KEY,
     UPLOAD_DIR: 'public/img',
+    PERSISTENCE: process.env.PERSISTENCE,
+    MODE: commandLineOptions.opts().mode || 'prod',
     GITHUB_AUTH: {
         clientId: process.env.GITHUB_AUTH_CLIENT_ID,
         clientSecret: process.env.GITHUB_AUTH_CLIENT_SECRET,

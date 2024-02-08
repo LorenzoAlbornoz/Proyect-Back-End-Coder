@@ -285,6 +285,22 @@ router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: 
     }
 })
 
+router.get('/loggerTest', async (req, res) => {
+    try {
+      req.logger.debug('Este es un mensaje de debug');
+      req.logger.http('Este es un mensaje de http');
+      req.logger.info('Este es un mensaje de info');
+      req.logger.warn('Este es un mensaje de warning');
+      req.logger.error('Este es un mensaje de error');
+      req.logger.fatal('Este es un mensaje fatal');
+  
+      res.status(200).json({ mensaje: 'Logs probados. Revisa los archivos de registro.' });
+    } catch (error) {
+      req.logger.error('Hubo un error al probar los logs:', error.message);
+      res.status(500).json({ mensaje: 'Hubo un error, inténtelo más tarde', status: 500 });
+    }
+  });
+
 export default router
 
 

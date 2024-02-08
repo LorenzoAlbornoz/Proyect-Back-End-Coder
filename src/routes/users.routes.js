@@ -6,6 +6,16 @@ import handlePolicies from '../config/policies.auth.js'
 const router = Router()
 const userController = new UserController()
 
+router.get('/users', async (req, res) => {
+  try {
+    const users = await userController.getUsers()
+
+    res.status(200).send({status: 'OK', data: users})
+  } catch (error) {
+    res.status(500).json({ mensaje: "Hubo un error, inténtelo más tarde", status: 500 });
+  }
+})
+
 router.post('/user/:userId/product/:productId',authToken ,handlePolicies(['admin']) , async (req, res) => {
     const userId = req.params.userId;
     const productId = req.params.productId;
