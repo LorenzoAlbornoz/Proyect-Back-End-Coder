@@ -6,38 +6,56 @@ import jwt from 'passport-jwt'
 import userModel from '../models/userSchema.js'
 import { encryptPassword, comparePassword } from '../utils.js';
 import config from '../config.js'
+import { CartController } from '../controllers/cartControllers.js';
+import { FavoriteController } from '../controllers/favoriteControllers.js';
+
+const cartController = new CartController();
+const favoriteController = new FavoriteController();
 
 const initPassport = () => {
     // Función utilizada por la estrategia registerAuth
-    const verifyRegistration = async (req, email, password, done) => {
+    const verifyRegistration = async (req, username, password, done) => {
         try {
-            const { name, email, age } = req.body
-
-            if (!name || !email || !age) {
-                return done('Se requiere nombre, usuario y contraseña en el body', false)
+    
+            const { name, email } = req.body;
+    
+            if (!name || !email ) {
+                return done('Se requiere nombre, usuario y contraseña en el body', false);
             }
-
-            const user = await userModel.findOne({ email })
-
-            // El usuario ya existe, llamamos a done() para terminar el proceso de
-            // passport, con null (no hay error) y false (sin devolver datos de usuario)
-            if (user) return done(null, false)
-
+    
+            const user = await userModel.findOne({ email: username });
+    
+            if (user) {
+                return done(null, false);
+            }
+    
             const newUser = {
                 email,
                 name,
-                age,
-                password: encryptPassword(password)
-            }
+                password: encryptPassword(password),
+            };
+    
+            const createdUser = await userModel.create(newUser);
+    
+            const newCart = await cartController.createCart(createdUser);
+    
+            // Asigna la referencia del carrito al campo 'cart' del usuario
+            createdUser.cart = newCart._id;
 
-            const process = await userModel.create(newUser)
-
-            return done(null, process)
+            const newFavorite = await favoriteController.createFavorite(createdUser);
+    
+            // Asigna la referencia del favorito al campo 'favorite' del usuario
+            createdUser.favorite = newFavorite._id;
+    
+            // Guarda nuevamente el usuario con la referencia al carrito y al favorito
+            await createdUser.save();
+    
+            return done(null, createdUser);
         } catch (err) {
-            return done(`Error passport local: ${err.message}`)
+            return done(`Error passport local: ${err.message}`);
         }
-    }
-
+    };
+    
     // Función utilizada por la estrategia restoreAuth
     const verifyRestoration = async (req, username, password, done) => {
         try {

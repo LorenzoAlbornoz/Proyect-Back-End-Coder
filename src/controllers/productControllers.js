@@ -61,4 +61,12 @@ export class ProductController {
             return err.message
         }
     }
+
+    async searchProductsByName(productName){
+        try {
+            return await productService.searchProductsByName(productName)
+        } catch (error) {
+            return err.message
+        }
+    }
 }

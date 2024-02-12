@@ -5,7 +5,13 @@ export class CategoryService{
     }
     async getCategories(){
         try {
-            return await categoryModel.find().lean()
+            const categories =  await categoryModel.find()
+
+            return res.status(200).json({
+                mensaje: "Categorias encontrados",
+                status: 200,
+                categories
+              });
         } catch (err) {
             return err.message;
         }

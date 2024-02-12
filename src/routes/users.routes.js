@@ -10,7 +10,7 @@ router.get('/users', async (req, res) => {
   try {
     const users = await userController.getUsers()
 
-    res.status(200).send({status: 'OK', data: users})
+    res.status(200).send({status: 'OK', users})
   } catch (error) {
     res.status(500).json({ mensaje: "Hubo un error, inténtelo más tarde", status: 500 });
   }

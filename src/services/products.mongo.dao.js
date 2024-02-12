@@ -128,5 +128,15 @@ export class ProductService {
             return err.message;
         }
     }
+
+    async searchProductsByName(productName) {
+        try {
+          // Utiliza la función de búsqueda en tu modelo de productos
+          const filteredProducts = await productModel.find({ title: { $regex: productName, $options: 'i' } }).lean();
+          return filteredProducts;
+        } catch (err) {
+          throw new Error(err.message);
+        }
+      }
     
 }
