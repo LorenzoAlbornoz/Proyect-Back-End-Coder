@@ -84,37 +84,33 @@ export class UserService{
         }
     }
 
-    async updateUser(id, name, username, password) {
+    async updateUser(id, updatedUser) {
         try {
-            if (!mongoose.isValidObjectId(id)) {
-                throw new Error("Id inválido");
-            }
-
-            const updateFields = {
-                ...req.body,
-                name,
-                username,
-            };
-
-            if (password) {
-                updateFields.password = encryptPassword(password);
-            }
-
-            const user = await userModel.findByIdAndUpdate(id, updateFields, { new: true });
-
+            const user = await userModel.findByIdAndUpdate(id, updatedUser, { new: true });
+        
             if (!user) {
-                throw new Error("Usuario no encontrado");
+              // Si no se encuentra el usuario, puedes devolver un código 404
+              return {
+                mensaje: "Usuario no encontrado",
+                status: 404
+              };
             }
-
+        
+            // Si se actualiza correctamente, devuelves un código 200 y la información del usuario
             return {
-                mensaje: "Usuario modificado correctamente",
-                status: 200,
-                user,
+              mensaje: "Usuario modificado correctamente",
+              status: 200,
+              user
             };
-        } catch (err) {
-            return err.message;
-        }
-    }
+          } catch (err) {
+            console.error(err); // Imprime el error en la consola
+            // En caso de error, puedes devolver un código 500
+            return {
+              mensaje: "Error interno del servidor",
+              status: 500
+            };
+          }
+        };
 
     async getUsersPaginated(page, limit) {
         try {
@@ -126,5 +122,4 @@ export class UserService{
             return err.message;
         }
     }
-
 }

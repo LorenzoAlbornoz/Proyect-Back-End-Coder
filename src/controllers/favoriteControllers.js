@@ -24,7 +24,7 @@ export class FavoriteController {
 
     async addProductToFavorite(favoriteId, productId) {
         try {
-            return await favoriteService.addProductToFavorite(favoriteId, productId)  // Corregir aquí
+            return await favoriteService.addProductToFavorite(favoriteId, productId) 
         } catch (err) {
             return err.message
         }
