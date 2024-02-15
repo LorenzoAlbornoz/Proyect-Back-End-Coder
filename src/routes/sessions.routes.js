@@ -96,9 +96,6 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
 
         // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
-        // Redirige al usuario a la vista de productos o cualquier otra página deseada
-        res.redirect('/products-views');
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -111,43 +108,27 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
 
 router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
-
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const user = req.user
+        console.log('Callback de Google llamado correctamente');
+        console.log('Usuario autenticado:', req.user);
 
-        // Verifica si el usuario ya tiene un carrito
-        if (!user.cart) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newCart = await cartController.createCart(user);
-            user.cart = newCart._id;
-            await user.save();
-        }
+        // Realiza acciones adicionales si es necesario
 
-        // Verifica si el usuario ya tiene un favorito
-        if (!user.favorite) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newFavorite = await favoriteController.createFavorite(user);
-            user.favorite = newFavorite._id;
-            await user.save();
-        }
-
+        // Genera un token de acceso
         const access_token = generateToken({
-            sub: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            cart: user.cart,
-            favorite: user.favorite
+            sub: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            cart: req.user.cart,
+            favorite: req.user.favorite
         }, '1h');
-
-        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         // Redirige al usuario a la vista de productos u otra página deseada
-        res.redirect('/products-views');
+        res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error(error);
+        console.error('Error en /api/googlecallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -156,46 +137,32 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
     }
 });
 
+
 // Ruta de autenticación de Facebook
 router.get('/facebook', passport.authenticate('facebook'));
 
 // Ruta de retorno después de la autenticación de Facebook
 router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const user = req.user
+        console.log('Callback de Facebook llamado correctamente');
+        console.log('Usuario autenticado:', req.user);
 
-        // Verifica si el usuario ya tiene un carrito
-        if (!user.cart) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newCart = await cartController.createCart(user);
-            user.cart = newCart._id;
-            await user.save();
-        }
+        // Realiza acciones adicionales si es necesario
 
-        // Verifica si el usuario ya tiene un favorito
-        if (!user.favorite) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newFavorite = await favoriteController.createFavorite(user);
-            user.favorite = newFavorite._id;
-            await user.save();
-        }
-
+        // Genera un token de acceso
         const access_token = generateToken({
-            sub: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            cart: user.cart,
-            favorite: user.favorite
+            sub: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            cart: req.user.cart,
+            favorite: req.user.favorite
         }, '1h');
-
-        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
-        // Redirige al usuario a la vista de productos u otra página deseada
-        res.redirect('/products-views');
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
+                // Redirige al usuario a la vista de productos u otra página deseada
+                res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error(error);
+        console.error('Error en /api/facebookcallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -226,7 +193,7 @@ router.post('/login', async (req, res) => {
         }
 
         const access_token = generateToken({
-            sub: user.id,
+            sub: user._id,
             name: user.name,
             email: user.email,
             role: user.role,

@@ -18,18 +18,9 @@ export class CartService {
             return err.message;
         }
     }
-    async getCartById(userId) {
+
+    async getCartById(cartId) {
         try {
-            // Obtener el usuario por su ID
-            const user = await userModel.findById(userId);
-
-            if (!user) {
-                return 'No se encuentra el usuario';
-            }
-
-            // Obtener el ID del carrito del usuario
-            const cartId = user.cart;
-
             // Buscar el carrito por su ID y populando los productos
             const cart = await cartModel.findById(cartId).populate('products.product');
 
@@ -56,6 +47,7 @@ export class CartService {
             return err.message;
         }
     }
+
 
     async addProductToCart(cartId, productId) {
         try {
@@ -89,23 +81,37 @@ export class CartService {
 
     async editProductQuantity(cartId, productId, newQuantity) {
         try {
+            // Verificar si newQuantity es un número positivo
+            newQuantity = parseInt(newQuantity);
+
+            if (isNaN(newQuantity) || newQuantity < 0) {
+                throw new Error('La nueva cantidad debe ser un número positivo');
+            }
+
+            // Obtener el carrito por ID
             const cart = await cartModel.findById(cartId);
 
             if (!cart) {
-                return null; // El carrito no existe
+                throw new Error('El carrito no existe');
             }
-            const productIndex = cart.products.findIndex(product => product._id.toString() === productId);
 
+            // Buscar el índice del producto en el carrito
+            const productIndex = cart.products.findIndex(product => product.product._id.toString() === productId);
             if (productIndex !== -1) {
-                // Si se encuentra el producto en el carrito, actualiza la cantidad
+                // Actualizar la cantidad del producto si se encuentra en el carrito
+
                 cart.products[productIndex].quantity = newQuantity;
+
+                // Guardar el carrito actualizado
                 const updatedCart = await cart.save();
+
                 return updatedCart;
             } else {
-                return null; // El producto no está en el carrito
+                throw new Error('El producto no está en el carrito');
             }
         } catch (err) {
-            return err.message
+            console.error(err);
+            throw new Error('Error al actualizar la cantidad del producto en el carrito');
         }
     }
 
@@ -142,7 +148,6 @@ export class CartService {
         }
     }
 
-
     async getCartQuantity(cartId) {
         try {
             const cart = await cartModel.findById(cartId);
@@ -159,75 +164,65 @@ export class CartService {
         }
     }
 
-    async processPurchase(userId) {
+    async processPurchase(cartId, userId) {
+        let ticket;
+    
         try {
             const user = await userModel.findById(userId);
-
+    
             if (!user) {
                 throw new Error('No se encuentra el usuario');
             }
-
-            const { cart: cartId } = user;
+    
             const cart = await cartModel.findById(cartId).populate('products.product');
-
+    
             if (!cart) {
                 throw new Error('No se encuentra el carrito');
             }
-
+    
             const ticketItems = [];
             let totalAmount = 0;
-
-            // Iterar sobre los productos del carrito
+            const unprocessedProducts = [];
+            const allProductsOutOfStock = cart.products.every(cartProduct => cartProduct.product.stock === 0);
+    
             for (const cartProduct of cart.products) {
                 const { product, quantity } = cartProduct;
-
+    
                 if (quantity <= product.stock) {
-                    // Suficiente stock para la cantidad deseada
                     const itemAmount = product.price * quantity;
-
                     ticketItems.push({ product: product._id, quantity, price: product.price });
                     totalAmount += itemAmount;
-
-                    // Descontar el stock utilizando quantity
                     product.stock -= quantity;
                     await product.save();
                 } else {
-                    // Reducir el stock en la cantidad disponible en stock
                     const remainingQuantity = product.stock;
-
                     const itemAmount = product.price * remainingQuantity;
-
                     ticketItems.push({ product: product._id, quantity: remainingQuantity, price: product.price });
                     totalAmount += itemAmount;
-
-                    // Descontar el stock utilizando remainingQuantity
                     product.stock = 0;
                     await product.save();
-
-                    // Actualizar la cantidad en el carrito después de la compra
                     cartProduct.quantity -= remainingQuantity;
+                    unprocessedProducts.push(cartProduct);
                 }
             }
-
-            // Filtrar los productos que no pudieron comprarse completamente
-            cart.products = cart.products.filter(cartProduct => {
-                const { quantity } = cartProduct;
-                return quantity > 0; // Incluir en el carrito si la cantidad es mayor que 0
-            });
-
+    
+            if (ticketItems.length === 0 || allProductsOutOfStock) {
+                return { success: false, message: 'No hay productos para procesar en la compra' };
+            }
+    
+            cart.products = unprocessedProducts;
             await cart.save();
-
-            const ticket = await ticketModel.create({
+    
+            ticket = await ticketModel.create({
                 purchase_datetime: new Date(),
                 amount: totalAmount,
                 purchaser: user._id,
                 items: ticketItems,
             });
-
+    
             return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket._id };
         } catch (error) {
             return { success: false, error: error.message };
         }
-    }
-
+    }     
 }
