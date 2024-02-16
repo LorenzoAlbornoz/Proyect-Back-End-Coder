@@ -29,9 +29,9 @@ export class UserController {
         }
     }
 
-    async updateUser(id, name, username, password) {
+    async updateUser(id, name, password, role) {
         try {
-            return await userService.updateUser(id, name, username, password)
+            return await userService.updateUser(id, name, password, role)
         } catch (err) {
             return err.message
         }
@@ -41,6 +41,14 @@ export class UserController {
         try {
             return await userService.getUsersPaginated(page, limit)
         } catch (err) {
+            return err.message
+        }
+    }
+
+    async changeToRole(id){
+        try {
+            return await userService.changeToRole(id)
+        } catch (error) {
             return err.message
         }
     }

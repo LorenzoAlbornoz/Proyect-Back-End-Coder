@@ -36,6 +36,7 @@ export const sendConfirmation = () => {
                 res.status(400).send({ status: 'ERR', data: 'Datos de usuario incompletos para enviar confirmación.' });
             }
         } catch (err) {
+            console.log(err)
             res.status(500).send({ status: 'ERR', data: err.message });
         }
     }

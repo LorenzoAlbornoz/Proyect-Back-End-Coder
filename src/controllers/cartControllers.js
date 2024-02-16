@@ -6,9 +6,9 @@ export class CartController {
   constructor() {
   }
 
-  async getCartById(userId) {
+  async getCartById(cartId) {
     try {
-      return await cartService.getCartById(userId)
+      return await cartService.getCartById(cartId)
     } catch (err) {
       return err.message;
     }
@@ -63,9 +63,9 @@ export class CartController {
     }
   }
 
-  async processPurchase(userId){
+  async processPurchase(cartId, userId){
     try {
-      const result = await cartService.processPurchase(userId)
+      const result = await cartService.processPurchase(cartId, userId)
       if (result.success) {
         return { status: 'OK', data: { ticketId: result.ticketId } };
       } else {

@@ -32,7 +32,7 @@ const config = {
     SECRET_KEY: process.env.SECRET_KEY,
     UPLOAD_DIR: 'public/img',
     PERSISTENCE: process.env.PERSISTENCE,
-    MODE: commandLineOptions.opts().mode || 'prod',
+    MODE: commandLineOptions.opts().mode || 'devel',
     GITHUB_AUTH: {
         clientId: process.env.GITHUB_AUTH_CLIENT_ID,
         clientSecret: process.env.GITHUB_AUTH_CLIENT_SECRET,

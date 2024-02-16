@@ -4,7 +4,7 @@ import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { comparePassword, generateToken, passportCall, authToken, sendConfirmation} from '../utils.js';
+import { comparePassword, generateToken, passportCall, authToken, sendConfirmation } from '../utils.js';
 import initPassport from '../config/passport.config.js';
 import handlePolicies from '../config/policies.auth.js';
 
@@ -96,9 +96,6 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
 
         // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
-        // Redirige al usuario a la vista de productos o cualquier otra página deseada
-        res.redirect('/products-views');
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -111,43 +108,27 @@ router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedir
 
 router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
-
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        const user = req.user
+        console.log('Callback de Google llamado correctamente');
+        console.log('Usuario autenticado:', req.user);
 
-        // Verifica si el usuario ya tiene un carrito
-        if (!user.cart) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newCart = await cartController.createCart(user);
-            user.cart = newCart._id;
-            await user.save();
-        }
+        // Realiza acciones adicionales si es necesario
 
-           // Verifica si el usuario ya tiene un favorito
-           if (!user.favorite) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newFavorite = await favoriteController.createFavorite(user);
-            user.favorite = newFavorite._id;
-            await user.save();
-        }
-
+        // Genera un token de acceso
         const access_token = generateToken({
-            sub: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            cart: user.cart,
-            favorite: user.favorite
+            sub: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            cart: req.user.cart,
+            favorite: req.user.favorite
         }, '1h');
-
-        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         // Redirige al usuario a la vista de productos u otra página deseada
-        res.redirect('/products-views');
+        res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error(error);
+        console.error('Error en /api/googlecallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -156,46 +137,32 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
     }
 });
 
+
 // Ruta de autenticación de Facebook
 router.get('/facebook', passport.authenticate('facebook'));
 
 // Ruta de retorno después de la autenticación de Facebook
 router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
-    const user = req.user
+        console.log('Callback de Facebook llamado correctamente');
+        console.log('Usuario autenticado:', req.user);
 
-        // Verifica si el usuario ya tiene un carrito
-        if (!user.cart) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newCart = await cartController.createCart(user);
-            user.cart = newCart._id;
-            await user.save();
-        }
+        // Realiza acciones adicionales si es necesario
 
-         // Verifica si el usuario ya tiene un favorito
-         if (!user.favorite) {
-            // Si no tiene un carrito, crea uno nuevo y vincúlalo al usuario
-            const newFavorite = await favoriteController.createFavorite(user);
-            user.favorite = newFavorite._id;
-            await user.save();
-        }
-
+        // Genera un token de acceso
         const access_token = generateToken({
-            sub: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            cart: user.cart,
-            favorite: user.favorite
+            sub: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            cart: req.user.cart,
+            favorite: req.user.favorite
         }, '1h');
-
-        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-
-        // Redirige al usuario a la vista de productos u otra página deseada
-        res.redirect('/products-views');
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
+                // Redirige al usuario a la vista de productos u otra página deseada
+                res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error(error);
+        console.error('Error en /api/facebookcallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -207,7 +174,7 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -226,7 +193,7 @@ router.post('/login', async (req, res) => {
         }
 
         const access_token = generateToken({
-            sub: user.id,
+            sub: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
@@ -234,7 +201,7 @@ router.post('/login', async (req, res) => {
             favorite: user.favorite
         }, '1h')
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
-        res.redirect('/products-views');
+        res.json({ token: access_token });
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -245,37 +212,15 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.post('/register',passport.authenticate('registerAuth', { failureRedirect: '/api/auth/failregister' }), sendConfirmation('email', 'register'), async (req, res) => {
+router.post('/register', passport.authenticate('registerAuth', { failureRedirect: '/api/auth/failregister' }), sendConfirmation('email', 'register'), async (req, res) => {
     try {
-
-        const user = req.user
-        // Crea un nuevo carrito y lo vincula al usuario recién creado
-        const newCart = await cartController.createCart(user);
-
-        // Asigna la referencia del carrito al campo 'cart' del usuario
-        user.cart = newCart._id;
-
-        // Crea un nuevo favorito y lo vincula al usuario recién creado
-        const newFavorite = await favoriteController.createFavorite(user);
-
-        // Asigna la referencia del favorito al campo 'favorite' del usuario
-        user.favorite = newFavorite._id;
-
-        // Guarda nuevamente el usuario con la referencia al carrito
-        await user.save();
-
-        // Redirigir al usuario a la página de inicio de sesión (login) después de un registro exitoso
-        return res.redirect('/login');
-
-    } catch (error) {
-        console.log(error);
-
-        // Mantener al usuario en la página de registro en caso de un error en el registro
-        return res.render('register', {
-            errorMessage: 'Hubo un error en el registro, inténtelo de nuevo.',
-        });
+        res.status(200).send({ status: 'OK', data: 'Usuario registrado, por favor revise su casilla de correo.' })
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({ status: 'ERR', data: err.message })
     }
-});
+})
+
 
 router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
     try {
@@ -287,19 +232,19 @@ router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: 
 
 router.get('/loggerTest', async (req, res) => {
     try {
-      req.logger.debug('Este es un mensaje de debug');
-      req.logger.http('Este es un mensaje de http');
-      req.logger.info('Este es un mensaje de info');
-      req.logger.warn('Este es un mensaje de warning');
-      req.logger.error('Este es un mensaje de error');
-      req.logger.fatal('Este es un mensaje fatal');
-  
-      res.status(200).json({ mensaje: 'Logs probados. Revisa los archivos de registro.' });
+        req.logger.debug('Este es un mensaje de debug');
+        req.logger.http('Este es un mensaje de http');
+        req.logger.info('Este es un mensaje de info');
+        req.logger.warn('Este es un mensaje de warning');
+        req.logger.error('Este es un mensaje de error');
+        req.logger.fatal('Este es un mensaje fatal');
+
+        res.status(200).json({ mensaje: 'Logs probados. Revisa los archivos de registro.' });
     } catch (error) {
-      req.logger.error('Hubo un error al probar los logs:', error.message);
-      res.status(500).json({ mensaje: 'Hubo un error, inténtelo más tarde', status: 500 });
+        req.logger.error('Hubo un error al probar los logs:', error.message);
+        res.status(500).json({ mensaje: 'Hubo un error, inténtelo más tarde', status: 500 });
     }
-  });
+});
 
 export default router
 

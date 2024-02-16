@@ -7,7 +7,7 @@ const categoryController = new CategoryController()
 router.get('/categories', async (req, res) => {
     try {
       const categories = await categoryController.getCategories()
-      res.status(200).send({ status: 'OK', data: categories })
+      res.status(200).send({ status: 'OK', categories })
     } catch (err) {
       res.status(500).send({ status: "ERR", data: err.message });
     }

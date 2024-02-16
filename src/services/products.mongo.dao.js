@@ -17,7 +17,7 @@ export class ProductService {
 
     async getProducts() {
         try {
-            const products = await productModel.find().lean()
+            const products = await productModel.find().populate("category")
             return products
         } catch (err) {
             return err.message
@@ -26,7 +26,7 @@ export class ProductService {
 
     async getProductById(id) {
         try {
-            const product = await productModel.findById(id)
+            const product = await productModel.findById(id);
             return product === null ? 'No se encuentra el producto' : product
         } catch (err) {
             return err.message
@@ -128,5 +128,15 @@ export class ProductService {
             return err.message;
         }
     }
+
+    async searchProductsByName(productName) {
+        try {
+          // Utiliza la función de búsqueda en tu modelo de productos
+          const filteredProducts = await productModel.find({ title: { $regex: productName, $options: 'i' } }).lean();
+          return filteredProducts;
+        } catch (err) {
+          throw new Error(err.message);
+        }
+      }
     
 }

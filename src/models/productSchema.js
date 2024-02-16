@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import mongoosePaginate from 'mongoose-paginate-v2'
-import Category from './categorySchema.js'
+import Category from './categorySchema.js';
 
 mongoose.pluralize(null)
 
