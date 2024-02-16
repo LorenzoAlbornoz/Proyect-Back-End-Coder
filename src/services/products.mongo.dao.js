@@ -26,7 +26,7 @@ export class ProductService {
 
     async getProductById(id) {
         try {
-            const product = await productModel.findById(id);
+            const product = await productModel.findById(id).populate("category")
             return product === null ? 'No se encuentra el producto' : product
         } catch (err) {
             return err.message

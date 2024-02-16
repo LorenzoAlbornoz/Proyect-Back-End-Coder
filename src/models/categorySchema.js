@@ -9,6 +9,9 @@ const categorySchema = new mongoose.Schema({
         type: String,
         require: [true, "El nombre es obligatorio"]
     },
+    image: {
+        type: String
+    },
     createdAt: {
         type: Date,
         default: Date.now()
