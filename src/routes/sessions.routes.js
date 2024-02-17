@@ -124,8 +124,8 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
             cart: req.user.cart,
             favorite: req.user.favorite
         }, '1h');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
-        // Redirige al usuario a la vista de productos u otra página deseada
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true, secure: true })
+        res.cookie('user_data', JSON.stringify({role: req.user.role,cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
         res.redirect('http://localhost:5173/');
     } catch (error) {
         console.error('Error en /api/googlecallback:', error);
@@ -158,9 +158,9 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
             cart: req.user.cart,
             favorite: req.user.favorite
         }, '1h');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
-                // Redirige al usuario a la vista de productos u otra página deseada
-                res.redirect('http://localhost:5173/');
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true, secure: true })
+        res.cookie('user_data', JSON.stringify({role: req.user.role,cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
+        res.redirect('http://localhost:5173/');
     } catch (error) {
         console.error('Error en /api/facebookcallback:', error);
         res.status(500).json({
