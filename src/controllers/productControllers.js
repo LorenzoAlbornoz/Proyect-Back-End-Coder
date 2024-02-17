@@ -22,6 +22,14 @@ export class ProductController {
         }
     }
 
+    async getProductsByCategory(categoryName){
+        try {
+            return await productService.getProductsByCategory(categoryName)
+        } catch (err) {
+            return err.message
+        }
+    }
+
     async addProduct(product) {
         try {
             return await productService.addProduct(product);
