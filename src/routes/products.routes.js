@@ -29,6 +29,15 @@ router.get('/products/search', async (req, res) => {
   }
 });
 
+router.get('/products/category', async (req, res) => {
+  try {
+    const { categoryName } = req.query;
+    const filteredProducts = await controller.getProductsByCategory(categoryName);
+    res.status(200).send({ status: 'OK', products: filteredProducts });
+  } catch (err) {
+    res.status(500).send({ status: 'ERR', data: err.message });
+  }
+});
 
 router.get('/product/:id', async (req, res) => {
   try{

@@ -7,7 +7,7 @@ const collection = 'category'
 const categorySchema = new mongoose.Schema({
     name: {
         type: String,
-        require: [true, "El nombre es obligatorio"]
+        required: [true, "El nombre es obligatorio"]
     },
     image: {
         type: String
