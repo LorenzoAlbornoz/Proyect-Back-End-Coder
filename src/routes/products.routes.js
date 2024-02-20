@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { uploader } from '../uploader.js'
 import { ProductController } from '../controllers/productControllers.js'
 import cloudinary from 'cloudinary'
-import {authToken } from '../utils.js'
+import { authToken } from '../utils.js'
 import handlePolicies from '../config/policies.auth.js'
 import CustomError from '../services/error.custom.class.js'
 import config from '../config.js'
@@ -15,7 +15,7 @@ router.get('/products', async (req, res) => {
     const products = await controller.getProducts()
     res.status(200).send({ status: 'OK', products })
   } catch (err) {
-    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 })
 
@@ -40,12 +40,12 @@ router.get('/products/category', async (req, res) => {
 });
 
 router.get('/product/:id', async (req, res) => {
-  try{
-  const product = await controller.getProductById(req.params.id);
-  res.status(200).send({ status: 'OK', product })
-} catch (err) {
-  return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
-}
+  try {
+    const product = await controller.getProductById(req.params.id);
+    res.status(200).send({ status: 'OK', product })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
 })
 
 router.post('/product', authToken, handlePolicies(['admin']), uploader.single('image'), async (req, res) => {
@@ -73,19 +73,19 @@ router.post('/product', authToken, handlePolicies(['admin']), uploader.single('i
     const result = await controller.addProduct(newContent);
     res.status(200).send({ status: 'OK', data: result });
   } catch (err) {
-    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 });
 
 
-router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single('image'), async (req, res) => {
+router.put('/product/:id', authToken, handlePolicies(['admin']), uploader.single('image'), async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Verificar si se envió un nuevo archivo
     const imageFile = req.file;
 
-    const { title, description, price, category, code, stock } = req.body;
+    const { title, description, price, category, code, stock, isFeatured, isOffer } = req.body;
 
     if (!title || !description || !price || !category || !code || !stock) {
       return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
@@ -97,6 +97,9 @@ router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single(
       cloudImg = await cloudinary.uploader.upload(imageFile.path);
     }
 
+    // Obtener el producto existente
+    const existingProduct = await controller.getProductById(id);
+
     // Crear el objeto actualizado del producto
     const updatedProduct = {
       title,
@@ -104,33 +107,58 @@ router.put('/product/:id',authToken ,handlePolicies(['admin']) ,uploader.single(
       price,
       category,
       // Si hay una nueva imagen, usar la URL segura proporcionada por Cloudinary
-      image: cloudImg ? cloudImg.secure_url : undefined,
+      image: cloudImg ? cloudImg.secure_url : existingProduct.image,
       code,
       stock,
+      isFeatured: isFeatured || existingProduct.isFeatured, // Usar el valor existente si no se proporciona uno nuevo
+      isOffer: isOffer || existingProduct.isOffer, // Usar el valor existente si no se proporciona uno nuevo
     };
+
+    // Actualizar el producto
     const product = await controller.updateProduct(id, updatedProduct, { new: true });
     res.status(200).send({ status: 'OK', data: product });
   } catch (error) {
-    return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
   }
 });
 
-router.delete('/product/:id',authToken ,handlePolicies(['admin']) ,async (req, res) => {
-  try{
-  const product = await controller.deleteProduct(req.params.id);
-  res.status(200).send({ status: 'OK', data: product })
-} catch (err) {
-  return next (new CustomError(config.errorsDictionary.INTERNAL_ERROR))
-}
+router.put('/product/featured/:id', authToken, handlePolicies(['admin']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await controller.toggleProductFeaturedStatus(id);
+    res.json(product);
+  } catch (error) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
+})
+
+router.put('/product/offer/:id', authToken, handlePolicies(['admin']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await controller.toggleProductOfferStatus(id);
+    res.json(product);
+  } catch (error) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
+})
+
+
+router.delete('/product/:id', authToken, handlePolicies(['admin']), async (req, res) => {
+  try {
+    const product = await controller.deleteProduct(req.params.id);
+    res.status(200).send({ status: 'OK', data: product })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
 })
 
 router.get('/mockingProducts/:qty([1-9]*)', async (req, res) => {
-  try{
-  const products = await controller.mockingProducts(req.params.qty);
-  res.status(200).send({status: 'OK', data: products})
-} catch (err) {
-  return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
-}
+  try {
+    const products = await controller.mockingProducts(req.params.qty);
+    res.status(200).send({ status: 'OK', data: products })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
 })
 
 
