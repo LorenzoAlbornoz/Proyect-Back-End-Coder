@@ -73,8 +73,24 @@ export class ProductController {
     async searchProductsByName(productName){
         try {
             return await productService.searchProductsByName(productName)
-        } catch (error) {
+        } catch (err) {
             return err.message
+        }
+    }
+
+    async toggleProductFeaturedStatus(id){
+        try {
+            return await productService.toggleProductFeaturedStatus(id)
+        } catch (err) {
+            return err.message
+        }
+    }
+
+    async toggleProductOfferStatus(id){
+        try {
+           return await productService.toggleProductOfferStatus(id)
+        } catch (err) {
+            return err.message;
         }
     }
 }

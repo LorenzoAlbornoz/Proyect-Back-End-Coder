@@ -165,4 +165,26 @@ export class ProductService {
         }
     }
 
+    async toggleProductFeaturedStatus(id){
+        try {
+            const product = await productModel.findById(id);
+            product.isFeatured = !product.isFeatured; 
+            await product.save();
+            return product
+        } catch (err) {
+            return err.message; 
+        }
+    }
+
+    async toggleProductOfferStatus(id){
+        try {
+            const product = await productModel.findById(id);
+            product.isOffer = !product.isOffer; 
+            await product.save();
+            return product
+        } catch (err) {
+            return err.message;
+        }
+    }
+
 }
