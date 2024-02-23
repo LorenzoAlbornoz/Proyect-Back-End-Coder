@@ -1,12 +1,15 @@
 import { Router } from 'express'
 import passport from 'passport';
+import jwt from 'jsonwebtoken'
+import nodemailer from 'nodemailer'
+import initPassport from '../config/passport.config.js';
+import handlePolicies from '../config/policies.auth.js';
+import config from '../config.js';
+import { comparePassword, generateToken, authToken, sendConfirmation, encryptPassword } from '../utils.js';
 import User from "../models/userSchema.js"
 import { UserController } from '../controllers/userControllers.js';
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
-import { comparePassword, generateToken, passportCall, authToken, sendConfirmation } from '../utils.js';
-import initPassport from '../config/passport.config.js';
-import handlePolicies from '../config/policies.auth.js';
 
 initPassport()
 const router = Router();
@@ -64,47 +67,6 @@ router.get('/failregister', async (req, res) => {
 router.get('/failrestore', async (req, res) => {
     res.status(400).send({ status: 'ERR', data: 'El email no existe o faltan datos obligatorios' })
 })
-
-router.get('/github', passport.authenticate('githubAuth', { scope: ['user:email'] }), async (req, res) => {
-});
-
-router.get('/githubcallback', passport.authenticate('githubAuth', { failureRedirect: '/login' }), async (req, res) => {
-    try {
-        const { _id, email } = req.user;
-
-        // Verifica si el correo electrónico ya está asociado a un usuario existente
-        let user = await User.findOne({ email });
-
-        // Crea un nuevo carrito y vincúlalo al usuario
-        const newCart = await cartController.createCart(user);
-
-        // Asigna la referencia del carrito al campo 'cart' del usuario
-        user.cart = newCart._id;
-
-        // Guarda nuevamente el usuario con la referencia al carrito
-        await user.save();
-
-        const access_token = generateToken({
-            sub: user.id,
-            name: user.name,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            cart: user.cart,
-            favorite: user.favorite
-        }, '1h')
-
-        // Puedes almacenar el token en cookies, en el cliente, o manejarlo de otra manera según tus necesidades
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            mensaje: 'Hubo un error, inténtelo más tarde',
-            status: 500,
-            error: error.message,
-        });
-    }
-});
 
 router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
@@ -221,14 +183,110 @@ router.post('/register', passport.authenticate('registerAuth', { failureRedirect
     }
 })
 
-
-router.post('/restore', passport.authenticate('restoreAuth', { failureRedirect: '/api/failrestore' }), async (req, res) => {
+router.post('/user/recover', async (req, res) => {
     try {
-        res.status(200).send({ status: 'OK', data: 'Clave actualizada' })
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                mensaje: "El usuario no existe",
+                status: 404
+            });
+        }
+
+        const token = jwt.sign({ id: user._id }, config.PRIVATE_KEY, { expiresIn: "1h" });
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            port: 587,
+            auth: {
+                user:config.GOOGLE_APP_EMAIL,
+                pass:config.GOOGLE_APP_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: 'fravega@gmail.com',
+            to: user.email,
+            subject: 'Recuperación de Contraseña',
+            html: `
+                <p>Hola ${user.name},</p>
+                <p>Recibes este correo porque has solicitado restablecer tu contraseña en nuestro sistema.</p>
+                <p>Para cambiar tu contraseña, haz clic en el siguiente botón:</p>
+                <a href="http://localhost:5173/reset_password/${user._id}/${encodeURIComponent(token)}">
+                    <button style="background-color: #4CAF50; /* Green */
+                    border: none;
+                    color: white;
+                    padding: 15px 32px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    font-size: 16px;">Restablecer Contraseña</button>
+                </a>
+                <p>Este enlace expirará en 1 hora.</p>
+                <p>Si no has solicitado este restablecimiento, puedes ignorar este correo y tu contraseña permanecerá sin cambios.</p>
+                <p>Gracias,</p>
+                <p>Tu equipo de Soporte</p>
+            `,
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                res.status(500).send({ status: 'ERR', data: error.message });
+            } else {
+                res.send({ Status: "Success" });
+            }
+        });
+
     } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
+        res.status(500).send({ status: 'ERR', data: err.message });
     }
-})
+});
+
+router.put('/user/reset/:id/:token', async (req, res) => {
+    try {
+        const { id, token } = req.params;
+        const { password } = req.body;
+
+        jwt.verify(token, config.PRIVATE_KEY, async (err, decoded) => {
+            if (err) {
+                if (err.name === 'TokenExpiredError') {
+                    // Redirigir a /login si el token ha expirado
+                    return res.redirect('http://localhost:5173/login');
+                } else {
+                    return res.json({ Status: "Error con el token" });
+                }
+            } else {
+                const user = await User.findById(id);
+                if (!user) {
+                    return res.status(404).json({ Status: "Usuario no encontrado" });
+                }
+
+                // Verificar si la nueva contraseña es igual a la actual
+                if (password === user.password) {
+                    return res.status(400).json({ Status: "No se puede utilizar la misma contraseña" });
+                }
+
+                // Verificar si la nueva contraseña es igual a la anterior
+                const isSameAsPrevious = comparePassword(password, user.password);
+                if (isSameAsPrevious) {
+                    return res.status(400).json({ Status: "SamePassword", Message: "La nueva contraseña es igual a la anterior" });
+                }
+
+                // Actualizar la contraseña
+                user.password = encryptPassword(password);
+                await user.save();
+
+                res.status(200).json({ Status: "Éxito" });
+            }
+        });
+    } catch (err) {
+        res.status(500).send({ status: 'ERR', data: err.message });
+    }
+});
+
 
 router.get('/loggerTest', async (req, res) => {
     try {

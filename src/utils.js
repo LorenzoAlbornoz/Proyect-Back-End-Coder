@@ -59,7 +59,7 @@ export const comparePassword = (password, hash) => {
     return isValid;
 };
 
-export const generateToken = (payload, duration) => jwt.sign(payload, process.env.PRIVATE_KEY, { expiresIn: duration })
+export const generateToken = (payload, duration) => jwt.sign(payload, config.PRIVATE_KEY, { expiresIn: duration })
 
 export const authToken = (req, res, next) => {
     const headerToken = req.headers.authorization ? req.headers.authorization.split(' ')[1]: undefined;
