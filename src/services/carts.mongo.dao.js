@@ -1,6 +1,5 @@
 import cartModel from '../models/cartSchema.js'
 import userModel from '../models/userSchema.js';
-import productModel from '../models/productSchema.js'
 import ticketModel from '../models/ticketSchema.js'
 
 export class CartService {
