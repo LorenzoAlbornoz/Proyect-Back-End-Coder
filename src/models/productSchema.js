@@ -25,8 +25,8 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: Category
     },
-    image: {
-        type: String
+    images: {
+        type: [String]
     },
     code: {
        type: String,

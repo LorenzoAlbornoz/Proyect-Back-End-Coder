@@ -59,36 +59,42 @@ export class ProductService {
         }
     }
 
-    async updateProduct(id, newContent) {
-        try {
-            // Obtener el producto antes de la actualización para acceder a la URL de la imagen
-            const product = await productModel.findById(id);
+   async updateProduct(id, newContent) {
+    try {
+        // Obtener el producto antes de la actualización para acceder a las URLs de las imágenes
+        const product = await productModel.findById(id);
 
-            // Console.log para la URL de la imagen antes de la actualización
-            console.log('URL de la imagen antes de la actualización:', product.image);
+        // Console.log para las URLs de las imágenes antes de la actualización
+        console.log('URLs de las imágenes antes de la actualización:', product.images);
 
-            // Actualizar el producto en la base de datos
-            const updatedProduct = await productModel.findByIdAndUpdate(id, newContent, { new: true });
+        // Actualizar el producto en la base de datos
+        const updatedProduct = await productModel.findByIdAndUpdate(id, newContent, { new: true });
 
-            // Verificar si el producto original tenía una URL de imagen
-            if (product && product.image) {
-                // Extraer el public_id de la URL de la imagen en Cloudinary
-                const publicId = product.image.split('/').pop().replace(/\.[^/.]+$/, '');
+        // Verificar si el producto original tenía URLs de imágenes
+        if (product && product.images && product.images.length > 0) {
+            // Extraer los public_id de las URLs de las imágenes en Cloudinary
+            const publicIds = product.images.map(url =>
+                url.split('/').pop().replace(/\.[^/.]+$/, '')
+            );
 
-                // Eliminar la imagen antigua de Cloudinary
-                await cloudinary.uploader.destroy(publicId);
-            }
-
-            // Console.log para el resultado de la actualización en la base de datos
-            console.log('Resultado de la actualización en la base de datos:', updatedProduct);
-
-            return updatedProduct;
-        } catch (err) {
-            // Console.log para manejar errores
-            console.error('Error en la actualización:', err.message);
-            return err.message;
+            // Eliminar las imágenes antiguas de Cloudinary
+            await Promise.all(publicIds.map(publicId =>
+                cloudinary.uploader.destroy(publicId)
+            ));
         }
+
+        // Console.log para el resultado de la actualización en la base de datos
+        console.log('Resultado de la actualización en la base de datos:', updatedProduct);
+
+        return updatedProduct;
+    } catch (err) {
+        // Console.log para manejar errores
+        console.error('Error en la actualización:', err.message);
+        return err.message;
     }
+}
+
+
 
     async deleteProduct(id) {
         try {
