@@ -34,28 +34,39 @@ export class CategoryService {
 
     async updateCategory(id, newContent) {
         try {
-            // Obtener el producto antes de la actualización para acceder a la URL de la imagen
+            // Obtener la categoría antes de la actualización para acceder a la URL de la imagen
             const category = await categoryModel.findById(id);
     
             // Console.log para la URL de la imagen antes de la actualización
             console.log('URL de la imagen antes de la actualización:', category.image);
     
-            // Actualizar el producto en la base de datos
-            const updatedCategory = await categoryModel.findByIdAndUpdate(id, newContent, { new: true });
+            // Verificar si se proporciona una nueva imagen en la actualización
+            if (newContent.image) {
+                // Actualizar el producto en la base de datos
+                const updatedCategory = await categoryModel.findByIdAndUpdate(id, newContent, { new: true });
     
-            // Verificar si el producto original tenía una URL de imagen
-            if (category && category.image) {
-                // Extraer el public_id de la URL de la imagen en Cloudinary
-                const publicId = category.image.split('/').pop().replace(/\.[^/.]+$/, '');
+                // Verificar si la categoría original tenía una URL de imagen
+                if (category && category.image) {
+                    // Extraer el public_id de la URL de la imagen en Cloudinary
+                    const publicId = category.image.split('/').pop().replace(/\.[^/.]+$/, '');
     
-                // Eliminar la imagen antigua de Cloudinary
-                await cloudinary.uploader.destroy(publicId);
+                    // Eliminar la imagen antigua de Cloudinary
+                    await cloudinary.uploader.destroy(publicId);
+                }
+    
+                // Console.log para el resultado de la actualización en la base de datos
+                console.log('Resultado de la actualización en la base de datos:', updatedCategory);
+    
+                return updatedCategory;
+            } else {
+                // Si no se proporciona una nueva imagen, simplemente actualizar la categoría sin eliminar la imagen anterior
+                const updatedCategory = await categoryModel.findByIdAndUpdate(id, newContent, { new: true });
+    
+                // Console.log para el resultado de la actualización en la base de datos
+                console.log('Resultado de la actualización en la base de datos:', updatedCategory);
+    
+                return updatedCategory;
             }
-    
-            // Console.log para el resultado de la actualización en la base de datos
-            console.log('Resultado de la actualización en la base de datos:', updatedCategory);
-    
-            return updatedCategory;
         } catch (err) {
             // Console.log para manejar errores
             console.error('Error en la actualización:', err.message);
