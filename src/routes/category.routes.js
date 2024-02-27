@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { uploader } from '../uploader.js'
 import cloudinary from 'cloudinary'
 import { CategoryController } from '../controllers/categoryControllers.js'
+import categoryModel from '../models/categorySchema.js'
 
 const router = Router()
 const categoryController = new CategoryController()
@@ -47,6 +48,48 @@ router.post('/category', uploader.single('image'), async (req, res) => {
     res.status(500).json({ status: "ERR", data: err.message });
   }
 });
+
+router.put('/category/:id', uploader.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    // Verificar si la categoría existe
+    const existingCategory = await categoryModel.findById(id);
+    if (!existingCategory) {
+      return res.status(404).send({ status: 'ERR', data: 'La categoría no fue encontrada' });
+    }
+
+    let updatedCategory;
+
+    // Verificar si se proporcionó una nueva imagen
+    if (req.file) {
+      // Cloudinary upload
+      const cloudImg = await cloudinary.uploader.upload(req.file.path);
+
+      updatedCategory = {
+        name,
+        image: cloudImg.secure_url,
+      };
+
+      // Verificar si la categoría original tenía una URL de imagen y eliminarla
+      if (existingCategory.image) {
+        const publicId = existingCategory.image.split('/').pop().replace(/\.[^/.]+$/, '');
+        await cloudinary.uploader.destroy(publicId);
+      }
+    } else {
+      // Si no se proporciona una nueva imagen, solo actualizar el nombre
+      updatedCategory = { name };
+    }
+
+    const category = await categoryController.updateCategory(id, updatedCategory, { new: true });
+    res.status(200).send({ status: 'OK', category });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
+  }
+});
+
 
 
 router.delete('/category/:id', async (req, res) => {

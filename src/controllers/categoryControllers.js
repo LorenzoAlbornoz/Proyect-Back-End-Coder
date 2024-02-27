@@ -30,6 +30,14 @@ export class CategoryController{
     }
   }
 
+  async updateCategory(id, newContent) {
+    try {
+        return await categoryService.updateCategory(id, newContent)
+    } catch (err) {
+        return err.message
+    }
+}
+
   async deleteCategory(id){
     try {
       return await categoryService.deleteCategory(id)
