@@ -71,15 +71,6 @@ router.put('/category/:id', uploader.single('image'), async (req, res) => {
         name,
         image: cloudImg.secure_url,
       };
-
-      // Verificar si la categoría original tenía una URL de imagen y eliminarla
-      if (existingCategory.image) {
-        const publicId = existingCategory.image.split('/').pop().replace(/\.[^/.]+$/, '');
-        await cloudinary.uploader.destroy(publicId);
-      }
-    } else {
-      // Si no se proporciona una nueva imagen, solo actualizar el nombre
-      updatedCategory = { name };
     }
 
     const category = await categoryController.updateCategory(id, updatedCategory, { new: true });

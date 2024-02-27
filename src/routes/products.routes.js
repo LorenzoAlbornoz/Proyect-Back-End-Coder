@@ -99,14 +99,6 @@ router.put('/product/:id', authToken, handlePolicies(['admin']), uploader.array(
     // Obtener el producto existente
     const existingProduct = await controller.getProductById(id);
 
-    // Eliminar las imágenes antiguas de Cloudinary
-    if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
-      await Promise.all(existingProduct.images.map((img) => {
-        const publicId = img.split('/').pop().replace(/\.[^/.]+$/, '');
-        return cloudinary.uploader.destroy(publicId);
-      }));
-    }
-
     // Crear el objeto actualizado del producto
     const updatedProduct = {
       title,
