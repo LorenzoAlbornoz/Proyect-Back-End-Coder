@@ -81,8 +81,6 @@ router.put('/category/:id', uploader.single('image'), async (req, res) => {
   }
 });
 
-
-
 router.delete('/category/:id', async (req, res) => {
   try {
     const category = await categoryController.deleteCategory(req.params.id);
