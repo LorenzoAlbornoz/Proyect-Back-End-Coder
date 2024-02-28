@@ -7,66 +7,9 @@ import handlePolicies from '../config/policies.auth.js';
 import config from '../config.js';
 import { comparePassword, generateToken, authToken, sendConfirmation, encryptPassword } from '../utils.js';
 import User from "../models/userSchema.js"
-import { UserController } from '../controllers/userControllers.js';
-import { CartController } from '../controllers/cartControllers.js';
-import { FavoriteController } from '../controllers/favoriteControllers.js';
 
 initPassport()
 const router = Router();
-const userController = new UserController();
-const cartController = new CartController();
-const favoriteController = new FavoriteController();
-
-router.get('/current', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
-    if (req.user) {
-        const userDTO = userController.createUserDTO(req.user);
-        res.status(200).send({ status: 'OK', data: userDTO });
-    } else {
-        res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' });
-    }
-});
-
-router.get('/logout', async (req, res) => {
-    try {
-        res.clearCookie('codertoken');
-
-        // req.session.destroy nos permite destruir la sesión
-        // De esta forma, en la próxima solicitud desde ese mismo navegador, se iniciará
-        // desde cero, creando una nueva sesión y volviendo a almacenar los datos deseados.
-        req.session.destroy((err) => {
-            if (err) {
-                res.status(500).send({ status: 'ERR', data: err.message })
-            } else {
-                // El endpoint puede retornar el mensaje de error, o directamente
-                // redireccionar a login o una página general.
-                // res.status(200).send({ status: 'OK', data: 'Sesión finalizada' })
-                res.redirect('/login')
-            }
-        })
-    } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message })
-    }
-})
-
-router.get('/admin', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
-    try {
-        // Obtén tus datos de alguna manera (pueden provenir de una base de datos, API, etc.)
-        const users = await userController.getUsers(); // Esto es un ejemplo, reemplázalo con tu lógica de obtención de datos
-
-        // Renderiza la vista de administrador con los datos de los usuarios
-        res.render('admin', { title: 'Lista de Usuarios', data: { users } });
-    } catch (err) {
-        res.status(500).send({ status: 'ERR', data: err.message });
-    }
-});
-
-router.get('/failregister', async (req, res) => {
-    res.status(400).send({ status: 'ERR', data: 'El email ya existe o faltan datos obligatorios' })
-})
-
-router.get('/failrestore', async (req, res) => {
-    res.status(400).send({ status: 'ERR', data: 'El email no existe o faltan datos obligatorios' })
-})
 
 router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
@@ -173,6 +116,10 @@ router.post('/login', async (req, res) => {
         });
     }
 });
+
+router.get('/failregister', async (req, res) => {
+    res.status(400).send({ status: 'ERR', data: 'El email ya existe o faltan datos obligatorios' })
+})
 
 router.post('/register', passport.authenticate('registerAuth', { failureRedirect: '/api/auth/failregister' }), sendConfirmation('email', 'register'), async (req, res) => {
     try {

@@ -1,0 +1,136 @@
+paths:
+  /api/favorite/{id}:
+    get:
+      summary: 'Obtiene un listado de favoritos por ID'
+      tags:
+        - Favorites
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Favorite'
+        "404":
+          description: 'Listado de favoritos no encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error interno del servidor'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/favorite/{cid}/product/{fid}:
+    post:
+      summary: 'Añade un producto a un listado de favoritos por su ID y un producto por su ID'
+      tags:
+        - Favorites
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: 'Producto agregado exitosamente al listado de favoritos'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+        "500":
+          description: 'Error al agregar el producto al listado de favoritos'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/favorite/{fid}/product/{pid}:
+    delete:
+      summary: 'Elimina un producto de un listado de favoritos por su ID y un producto por su ID'
+      tags:
+        - Favorites
+      parameters:
+        - name: fid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'Producto eliminado exitosamente del listado de favoritos'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+        "404":
+          description: 'El producto no está en el listado de favoritos'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error al eliminar el producto del listado de favoritos'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    Favorite:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              product:
+                type: string
+                description: 'ID del producto'
+          description: 'Lista de productos en el listado de favoritos'
+      example:
+        products:
+          - product: '638b8c323f3a4b3be6dc397e'

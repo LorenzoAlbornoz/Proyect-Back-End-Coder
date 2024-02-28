@@ -135,7 +135,7 @@ paths:
                   status:
                     type: string
 
-  /api/product:
+    /api/product:
     post:
       summary: 'Añade un nuevo producto'
       tags:
@@ -146,19 +146,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewProduct'
+              $ref: '#/components/requestBodies/Product'
       responses:
         "200":
           description: 'OK'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  data:
-                    $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/Product'
         "400":
           description: 'Parámetros insuficientes'
           content:
@@ -197,19 +192,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProduct'
+              $ref: '#/components/requestBodies/UpdateProduct'
       responses:
         "200":
           description: 'OK'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  data:
-                    $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/Product'
         "400":
           description: 'Parámetros insuficientes'
           content:
@@ -320,7 +310,7 @@ paths:
 
 components:
   schemas:
-    NewProduct:
+    Product:
       type: object
       properties:
         title:
@@ -357,6 +347,7 @@ components:
         code: 'ABC123'
         stock: 50
 
+  requestBodies:
     UpdateProduct:
       type: object
       properties:

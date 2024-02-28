@@ -1,0 +1,301 @@
+openapi: 3.0.0
+info:
+  title: API de Autenticación y Usuarios
+  description: API para autenticación de usuarios y gestión de usuarios
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Desarrollo
+
+paths:
+  /api/auth/google:
+    get:
+      summary: Inicia sesión con Google
+      tags:
+        - Autenticación
+      responses:
+        "302":
+          description: Redirección exitosa a Google para autenticación
+          headers:
+            Location:
+              description: URL de redirección a Google
+              schema:
+                type: string
+
+  /api/auth/googlecallback:
+    get:
+      summary: Callback después de la autenticación con Google
+      tags:
+        - Autenticación
+      responses:
+        "302":
+          description: Redirección exitosa a la aplicación cliente
+          headers:
+            Location:
+              description: URL de redirección después de la autenticación exitosa
+
+  /api/auth/facebook:
+    get:
+      summary: Inicia sesión con Facebook
+      tags:
+        - Autenticación
+      responses:
+        "302":
+          description: Redirección exitosa a Facebook para autenticación
+          headers:
+            Location:
+              description: URL de redirección a Facebook
+              schema:
+                type: string
+
+  /api/auth/facebookcallback:
+    get:
+      summary: Callback después de la autenticación con Facebook
+      tags:
+        - Autenticación
+      responses:
+        "302":
+          description: Redirección exitosa a la aplicación cliente
+          headers:
+            Location:
+              description: URL de redirección después de la autenticación exitosa
+
+  /api/auth/login:
+    post:
+      summary: Inicia sesión con credenciales
+      tags:
+        - Autenticación
+      requestBody:
+        description: Credenciales de usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  status:
+                    type: integer
+        "400":
+          description: Contraseña inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  status:
+                    type: integer
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  status:
+                    type: integer
+
+  /api/auth/failregister:
+    get:
+      summary: Error al registrar el usuario
+      tags:
+        - Autenticación
+      responses:
+        "400":
+          description: Error en el registro de usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: string
+
+  /api/auth/register:
+    post:
+      summary: Registra un nuevo usuario
+      tags:
+        - Autenticación
+      requestBody:
+        description: Datos de registro del usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                // Propiedades del usuario para el registro
+              required:
+                // Propiedades requeridas para el registro
+      responses:
+        "200":
+          description: Registro exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: string
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: string
+
+  /api/auth/user/recover:
+    post:
+      summary: Envía correo de recuperación de contraseña
+      tags:
+        - Autenticación
+      requestBody:
+        description: Correo electrónico del usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        "200":
+          description: Correo de recuperación enviado con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  status:
+                    type: integer
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  status:
+                    type: integer
+
+  /api/auth/user/reset/{id}/{token}:
+    put:
+      summary: Restablece la contraseña del usuario
+      tags:
+        - Autenticación
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Nueva contraseña del usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              required:
+                - password
+      responses:
+        "200":
+          description: Contraseña restablecida con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
+        "400":
+          description: No se puede utilizar la misma contraseña
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
+                  Message:
+                    type: string
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
