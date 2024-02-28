@@ -7,6 +7,8 @@ import session from 'express-session'
 import FileStore from 'session-file-store'
 import MongoStore from 'connect-mongo'
 import passport from 'passport'
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUiExpress from 'swagger-ui-express';
 
 import { __dirname } from './utils.js'
 import productsRouter from './routes/products.routes.js';
@@ -28,6 +30,19 @@ app.options('*', cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(config.SECRET_KEY))
+
+// Generamos la configuración inicial para swaggerJsdoc
+const swaggerOptions = {
+  definition: {
+      openapi: '3.0.1',
+      info: {
+          title: 'Documentación sistema AdoptMe',
+          description: 'Esta documentación cubre toda la API habilitada para AdoptMe',
+      },
+  },
+  apis: ['./src/docs/**/*.yaml'], // todos los archivos de configuración de rutas estarán aquí
+};
+const specs = swaggerJsdoc(swaggerOptions);
     
 
 const fileStorage = FileStore(session)
@@ -55,7 +70,7 @@ cloudinary.config({
     cloud_name:config.CLOUD_NAME,
     api_key:config.APY_KEY,
     api_secret: config.APY_SECRET
-});3
+});
 
 app.use(addLogger)
 app.use(config.API, cartsRouter);
@@ -65,6 +80,7 @@ app.use('/', viewsRouter)
 app.use(config.API, sessionsRouter)
 app.use(config.API, usersRouter);
 app.use(config.API, favoriteRouter)
+app.use('/api/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
 
 app.use('/static', express.static(`${__dirname}/public`))
 

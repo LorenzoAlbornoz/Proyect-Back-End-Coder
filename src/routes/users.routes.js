@@ -16,16 +16,6 @@ router.get('/users', async (req, res) => {
   }
 })
 
-router.post('/user/:userId/product/:productId',authToken ,handlePolicies(['admin']) , async (req, res) => {
-    const userId = req.params.userId;
-    const productId = req.params.productId;
-  
-    // Llama a la función del controlador de usuario para agregar el producto al carrito
-    const addProductResult = await userController.agregarAlCarrito(userId, productId);
-  
-    res.status(addProductResult.status).json({ mensaje: addProductResult.mensaje });
-  });
-
   router.put('/user/:id', authToken, handlePolicies(['admin']), async (req, res, next) => {
     try {
       const { id } = req.params;
