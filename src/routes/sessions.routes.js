@@ -3,9 +3,8 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import initPassport from '../config/passport.config.js';
-import handlePolicies from '../config/policies.auth.js';
 import config from '../config.js';
-import { comparePassword, generateToken, authToken, sendConfirmation, encryptPassword } from '../utils.js';
+import { comparePassword, generateToken, sendConfirmation, encryptPassword } from '../utils.js';
 import User from "../models/userSchema.js"
 
 initPassport()
@@ -28,8 +27,8 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
             role: req.user.role,
             cart: req.user.cart,
             favorite: req.user.favorite
-        }, '1m');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true, secure: true })
+        }, '1h');
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true})
         res.cookie('user_data', JSON.stringify({role: req.user.role, cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
         res.redirect('http://localhost:5173/');
     } catch (error) {
@@ -62,8 +61,8 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
             role: req.user.role,
             cart: req.user.cart,
             favorite: req.user.favorite
-        }, '1m');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true, secure: true })
+        }, '1h');
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true})
         res.cookie('user_data', JSON.stringify({role: req.user.role,cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
         res.redirect('http://localhost:5173/');
     } catch (error) {
@@ -104,7 +103,7 @@ router.post('/login', async (req, res) => {
             role: user.role,
             cart: user.cart,
             favorite: user.favorite
-        }, '1m')
+        }, '1h')
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.json({ token: access_token });
     } catch (error) {

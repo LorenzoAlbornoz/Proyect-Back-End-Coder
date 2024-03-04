@@ -14,7 +14,7 @@ import { __dirname } from './utils.js'
 import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
-import viewsRouter from './routes/views.routes.js'
+// import viewsRouter from './routes/views.routes.js'
 import favoriteRouter from './routes/favorite.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
 import usersRouter from './routes/users.routes.js';
@@ -77,7 +77,7 @@ app.use(addLogger)
 app.use(config.API, cartsRouter);
 app.use(config.API, categoryRouter)
 app.use(config.API, productsRouter);
-app.use('/', viewsRouter)
+// app.use('/', viewsRouter)
 app.use(config.API, sessionsRouter)
 app.use(config.API, usersRouter);
 app.use(config.API, favoriteRouter);
