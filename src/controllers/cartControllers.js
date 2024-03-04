@@ -54,6 +54,14 @@ export class CartController {
     }
   }
 
+  async clearCart(cartId){
+    try {
+      return await cartService.clearCart(cartId)
+    } catch (error) {
+      return err.message 
+    }
+  }
+
 
   async getCartQuantity(cartId) {
     try {

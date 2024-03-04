@@ -74,7 +74,7 @@ export const authToken = (req, res, next) => {
     const receivedToken = headerToken || codertoken || queryToken;
 
     console.log('Received Token:', receivedToken);
-    console.log('Reiceived user_data', user_data)
+    console.log('Reiceived user_data', user_data);
 
     // Verifica si 'user_data' está presente y lo asigna directamente a 'req.user'
     if (user_data) {

@@ -138,12 +138,22 @@ export class CartService {
         }
     }
 
-    async deleteCart(id) {
+    async clearCart(cartId) {
         try {
-            const procedure = await cartModel.findByIdAndDelete(id)
-            return procedure
+            const cart = await cartModel.findById(cartId);
+    
+            if (!cart) {
+                return null; // El carrito no existe
+            }
+    
+            // Establece el array de productos del carrito como un array vacío
+            cart.products = [];
+    
+            // Guarda y devuelve el carrito actualizado
+            const updatedCart = await cart.save();
+            return updatedCart;
         } catch (err) {
-            return err.message
+            return err.message;
         }
     }
 

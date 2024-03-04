@@ -125,4 +125,19 @@ router.delete('/cart/:cid/product/:pid', async (req, res) => {
   }
 });
 
+router.delete('/cleanCart/:cid', async (req, res) => {
+  const cartId = req.params.cid;
+  try {
+    const cleanCart = await controller.clearCart(cartId);
+    if (cleanCart !== null) {
+      res.status(200).json({ data: cleanCart });
+    } else {
+      res.status(500).json({ error: 'Error al vaciar el carrito' });
+    }
+  } catch (error) {
+    console.error('Error al procesar la solicitud:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 export default router
