@@ -16,7 +16,7 @@ router.get('/users', async (req, res) => {
   }
 })
 
-  router.put('/user/:id', authToken, handlePolicies(['admin']), async (req, res, next) => {
+  router.put('/user/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res, next) => {
     try {
       const { id } = req.params;
   
@@ -50,7 +50,7 @@ router.get('/users', async (req, res) => {
 });
  
   
-  router.delete('/user/:userId',authToken ,handlePolicies(['admin']) , async (req, res) => {
+  router.delete('/user/:userId',authToken ,handlePolicies(['admin', 'premium']) , async (req, res) => {
     const {userId} = req.params;
 
     try {

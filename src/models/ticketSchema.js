@@ -1,5 +1,4 @@
 import mongoose from 'mongoose'
-import User from './userSchema.js'
 import bcrypt from 'bcrypt';
 
 mongoose.pluralize(null)
@@ -21,7 +20,7 @@ const ticketSchema = new mongoose.Schema({
     },
     purchaser: {
         type: mongoose.Schema.Types.ObjectId,  
-        ref: User,  
+        ref: 'users',  
         required: true
     }
 })

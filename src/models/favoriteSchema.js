@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import Product from './productSchema.js';
 
 mongoose.pluralize(null);
 
@@ -10,7 +9,7 @@ const favoriteSchema = new mongoose.Schema({
     {
       product: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: Product,
+        ref: 'products',
         required: true,
       }
     }

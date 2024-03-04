@@ -1,7 +1,5 @@
 import mongoose from 'mongoose'
 import mongoosePaginate from 'mongoose-paginate-v2'
-import Category from './categorySchema.js';
-// import User from './userSchema.js'
 
 mongoose.pluralize(null)
 
@@ -23,7 +21,7 @@ const productSchema = new mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: Category
+        ref: 'category'
     },
     images: {
         type: [String]
@@ -44,11 +42,10 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // owner: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: User,
-    //     default: "admin",
-    // }
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Users'
+    }
 })
 
 productSchema.plugin(mongoosePaginate)

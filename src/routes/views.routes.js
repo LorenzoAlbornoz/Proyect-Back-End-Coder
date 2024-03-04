@@ -155,17 +155,17 @@ router.post('/favorite/:favoriteId/product/:productId', authToken, handlePolicie
   }
 });
 
-router.post('/cart/:cartId/product/:productId', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
-  const cartId = req.params.cartId;
-  const productId = req.params.productId;
-  const addProductResult = await cartController.addProductToCart(cartId, productId);
+// router.post('/cart/:cartId/product/:productId', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
+//   const cartId = req.params.cartId;
+//   const productId = req.params.productId;
+//   const addProductResult = await cartController.addProductToCart(cartId, productId);
 
-  if (addProductResult !== null) {
-    res.status(201).json({ data: addProductResult });
-  } else {
-    res.status(500).json({ error: 'Error al agregar el producto' });
-  }
-});
+//   if (addProductResult !== null) {
+//     res.status(201).json({ data: addProductResult });
+//   } else {
+//     res.status(500).json({ error: 'Error al agregar el producto' });
+//   }
+// });
 
 
 router.put('/cart/:cartId/product/:productId', authToken, handlePolicies(['user', 'premium', 'admin']), async (req, res) => {
