@@ -61,53 +61,24 @@ export const comparePassword = (password, hash) => {
 
 export const generateToken = (payload, duration) => jwt.sign(payload, config.PRIVATE_KEY, { expiresIn: duration })
 
-export const authToken = (req, res, next) => {
-    const headerToken = req.headers.authorization ? req.headers.authorization.split(' ')[1] : undefined;
-    const codertoken = req.cookies && req.cookies['codertoken'] ? req.cookies['codertoken'] : undefined;
-    const user_data = req.cookies && req.cookies['user_data'] ? req.cookies['user_data'] : undefined;
-    const queryToken = req.query.access_token ? req.query.access_token : undefined;
+    export const authToken = (req, res, next) => {
+        const headerToken = req.headers.authorization ? req.headers.authorization.split(' ')[1]: undefined;
+        const cookieToken = req.cookies && req.cookies['codertoken'] ? req.cookies['codertoken']: undefined;
+        const queryToken = req.query.access_token ? req.query.access_token: undefined;
+        const receivedToken = headerToken || cookieToken || queryToken
 
-    console.log('Cookies recibidas en authToken:', req.cookies);
-    console.log('Cookies recibidas:', req.cookies);
-
-    // Prioriza 'codertoken', pero usa 'user_data' si 'codertoken' no está presente
-    const receivedToken = headerToken || codertoken || queryToken;
-
-    console.log('Received Token:', receivedToken);
-    console.log('Reiceived user_data', user_data);
-
-    // Verifica si 'user_data' está presente y lo asigna directamente a 'req.user'
-    if (user_data) {
-        try {
-            const decodedUserData = decodeURIComponent(user_data);
-            req.user = JSON.parse(decodedUserData);
-            console.log('User Data:', req.user);
-            return next();
-        } catch (error) {
-            console.error('Error parsing user_data:', error);
-            return res.status(403).send({ status: 'ERR', data: 'No autorizado' });
-        }
+        console.log('receivedToken:', receivedToken);
+        
+        if (!receivedToken) return res.redirect('/login')
+    
+        jwt.verify(receivedToken, config.PRIVATE_KEY, (err, credentials) => {
+            if (err) return res.status(403).send({ status: 'ERR', data: 'No autorizado' })
+            // Si el token verifica ok, pasamos los datos del payload a un objeto req.user
+            req.user = credentials
+            next()
+        })
     }
-
-    // Si 'receivedToken' no está presente, realiza la redirección al login
-    if (!receivedToken) {
-        return res.redirect('/login');
-    }
-
-    // Si no es 'user_data', verifica que 'receivedToken' sea un token JWT válido
-    jwt.verify(receivedToken, config.PRIVATE_KEY, (err, credentials) => {
-        if (err) {
-            console.error('Error verifying token:', err);
-            return res.status(403).send({ status: 'ERR', data: 'No autorizado' });
-        }
-        console.log('Decoded User from middleware:', credentials);
-        // Si el token verifica ok, pasa los datos del payload a un objeto req.user
-        req.user = credentials;
-        console.log('Decoded User:', req.user);
-        next();
-    });
-};
-
+    
 
 // Rutina de intercepción de errores para passport
 export const passportCall = (strategy, options) => {
