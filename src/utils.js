@@ -66,8 +66,6 @@ export const generateToken = (payload, duration) => jwt.sign(payload, config.PRI
         const cookieToken = req.cookies && req.cookies['codertoken'] ? req.cookies['codertoken']: undefined;
         const queryToken = req.query.access_token ? req.query.access_token: undefined;
         const receivedToken = headerToken || cookieToken || queryToken
-
-        console.log('receivedToken:', receivedToken);
         
         if (!receivedToken) return res.redirect('/login')
     
@@ -79,7 +77,6 @@ export const generateToken = (payload, duration) => jwt.sign(payload, config.PRI
         })
     }
     
-
 // Rutina de intercepción de errores para passport
 export const passportCall = (strategy, options) => {
     return async (req, res, next) => {
