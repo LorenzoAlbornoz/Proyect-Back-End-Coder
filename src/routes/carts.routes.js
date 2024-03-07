@@ -14,14 +14,15 @@ router.get('/cart/:cid', async (req, res) => {
     const cart = await controller.getCartById(cartId);
 
     if (cart) {
-      res.send(cart);
+      res.status(200).json({ status: 'OK', data: cart });
     } else {
-      res.status(404).json({ error: 'El carrito no existe' });
+      res.status(404).json({ status: 'ERR', error: 'El carrito no existe' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el carrito' });
+    res.status(500).json({ status: 'ERR', error: 'Error al obtener el carrito' });
   }
 });
+
 
 router.get('/cart/quantity/:cartId', async (req, res) => {
   try {
@@ -29,7 +30,7 @@ router.get('/cart/quantity/:cartId', async (req, res) => {
     const cartQuantity = await controller.getCartQuantity(cartId);
 
     if (cartQuantity !== null) {
-      res.json({ quantity: cartQuantity });
+      res.status(200).json({ quantity: cartQuantity }); 
     } else {
       res.status(404).json({ error: 'Carrito no encontrado' });
     }
@@ -88,7 +89,7 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
 });
 
 
-router.put('/cart/:cartId/product/:productId',  async (req, res) => {
+router.put('/cart/:cartId/product/:productId', async (req, res) => {
   const cartId = req.params.cartId;
   const productId = req.params.productId;
   const newQuantity = req.body.quantity;
@@ -98,7 +99,7 @@ router.put('/cart/:cartId/product/:productId',  async (req, res) => {
 
     // Verificar si el producto se actualizó correctamente en el carrito
     if (updatedCart !== null) {
-      res.json({ message: 'Cantidad del producto actualizada exitosamente' });
+      res.status(200).json({ message: 'Cantidad del producto actualizada exitosamente' });
     } else {
       res.status(404).json({ error: 'El producto no está en el carrito' });
     }
