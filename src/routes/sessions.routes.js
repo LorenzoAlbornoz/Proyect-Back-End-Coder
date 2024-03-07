@@ -41,7 +41,6 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
     }
 });
 
-
 // Ruta de autenticación de Facebook
 router.get('/facebook', passport.authenticate('facebook'));
 
