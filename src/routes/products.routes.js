@@ -126,21 +126,21 @@ router.put('/product/featured/:id', authToken, handlePolicies(['admin', 'premium
   const { id } = req.params;
   try {
     const product = await controller.toggleProductFeaturedStatus(id);
-    res.json(product);
+    res.json({ status: 'OK', data: product });
   } catch (error) {
-    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
   }
-})
+});
 
 router.put('/product/offer/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res) => {
   const { id } = req.params;
   try {
     const product = await controller.toggleProductOfferStatus(id);
-    res.json(product);
+    res.json({ status: 'OK', data: product });
   } catch (error) {
-    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
   }
-})
+});
 
 router.delete('/product/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res, next) => {
   try {
