@@ -9,7 +9,7 @@ export class ProductService {
     async addProduct(product) {
         try {
             const products = await productModel.create(product);
-            return products === null ? 'No se pudo crear el producto' : 'Producto creado';
+            return products 
         } catch (err) {
             return err.message;
         }
