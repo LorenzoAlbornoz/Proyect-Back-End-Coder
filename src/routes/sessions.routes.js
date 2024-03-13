@@ -14,8 +14,9 @@ router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        console.log('Callback de Google llamado correctamente');
-        console.log('Usuario autenticado:', req.user);
+        // Actualizar last_connection
+        const userId = req.user._id;
+        await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
         // Realiza acciones adicionales si es necesario
 
@@ -28,8 +29,8 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
             cart: req.user.cart,
             favorite: req.user.favorite
         }, '1h');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true})
-        res.cookie('user_data', JSON.stringify({role: req.user.role, cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
+        res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite }), { maxAge: 60 * 60 * 1000, httpOnly: false });
         res.redirect('http://localhost:5173/');
     } catch (error) {
         console.error('Error en /api/googlecallback:', error);
@@ -47,8 +48,9 @@ router.get('/facebook', passport.authenticate('facebook'));
 // Ruta de retorno después de la autenticación de Facebook
 router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        console.log('Callback de Facebook llamado correctamente');
-        console.log('Usuario autenticado:', req.user);
+        // Actualizar last_connection
+        const userId = req.user._id;
+        await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
         // Realiza acciones adicionales si es necesario
 
@@ -61,8 +63,8 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
             cart: req.user.cart,
             favorite: req.user.favorite
         }, '1h');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true})
-        res.cookie('user_data', JSON.stringify({role: req.user.role,cart: req.user.cart,sub: req.user._id, favorite : req.user.favorite}), { maxAge: 60 * 60 * 1000, httpOnly: false});
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
+        res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite }), { maxAge: 60 * 60 * 1000, httpOnly: false });
         res.redirect('http://localhost:5173/');
     } catch (error) {
         console.error('Error en /api/facebookcallback:', error);
@@ -94,6 +96,9 @@ router.post('/login', async (req, res) => {
                 status: 400,
             });
         }
+        // Actualizar last_connection
+        const userId = user._id;
+        await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
         const access_token = generateToken({
             sub: user._id,
@@ -146,8 +151,8 @@ router.post('/user/recover', async (req, res) => {
             service: 'gmail',
             port: 587,
             auth: {
-                user:config.GOOGLE_APP_EMAIL,
-                pass:config.GOOGLE_APP_PASS
+                user: config.GOOGLE_APP_EMAIL,
+                pass: config.GOOGLE_APP_PASS
             }
         });
 

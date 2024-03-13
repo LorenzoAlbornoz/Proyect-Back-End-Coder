@@ -35,7 +35,20 @@ const userSchema = new mongoose.Schema({
         type:String,
         default: "user",
         enum: ["user", "premium", "admin"]
-    }
+    },
+    documents: [{
+        name: {
+          type: String,
+          required: true,
+        },
+        reference: {
+          type: String,
+          required: true,
+        },
+      }],
+      last_connection: {
+        type: Date,
+      }
 })
 
 userSchema.plugin(mongoosePaginate)
