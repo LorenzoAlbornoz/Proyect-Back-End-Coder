@@ -14,12 +14,12 @@ router.get('/cart/:cid', async (req, res) => {
     const cart = await controller.getCartById(cartId);
 
     if (cart) {
-      res.status(200).json({ status: 'OK', data: cart });
+      res.send(cart);
     } else {
-      res.status(404).json({ status: 'ERR', error: 'El carrito no existe' });
+      res.status(404).json({ error: 'El carrito no existe' });
     }
   } catch (error) {
-    res.status(500).json({ status: 'ERR', error: 'Error al obtener el carrito' });
+    res.status(500).json({ error: 'Error al obtener el carrito' });
   }
 });
 
