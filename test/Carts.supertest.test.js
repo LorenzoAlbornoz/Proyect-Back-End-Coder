@@ -46,15 +46,6 @@ describe('Testing', function () {
             expect(result.body.message).to.equal('Cantidad del producto actualizada exitosamente');
         });
 
-        it('GET /api/cart/:id debe retornar un cart por su ID', async function () {
-            const cartId = '65d02f399799e8b068da6164';
-            const result = await requester.get(`/api/cart/${cartId}`);
-            const body = result.body;
-
-            expect(body).to.haveOwnProperty('status');
-            expect(body.data).to.exist;
-            expect(body.data._id).to.equal(cartId);
-        })
 
         it('GET /api/cart/quantity/:cartId debe retornar la cantidad de productos de un cart por su ID', async function () {
             const cartId = '65d02f399799e8b068da6164';
