@@ -33,6 +33,7 @@ const initPassport = () => {
                 email,
                 name,
                 password: encryptPassword(password),
+                last_connection: new Date(),
             };
     
             const createdUser = await userModel.create(newUser);
