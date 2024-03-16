@@ -22,12 +22,12 @@ export class UserService{
                 throw new Error("Id inválido");
             }
 
-            const user = await userModel.findById(id);
+            const user = await userModel.findById(id).populate('documents');
 
             if (!user) {
                 throw new Error("Usuario no encontrado");
             }
-
+            
             return {
                 mensaje: "Usuario encontrado",
                 status: 200,
