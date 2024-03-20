@@ -1,14 +1,19 @@
-import multer from 'multer'
-import { __dirname} from './utils.js'
+import multer from "multer";
+import path from "path";
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, `${__dirname}/public/img`)
-    },
+const storage = multer.diskStorage({});
 
-    filename: (req, file, cb) => {
-        cb(null, file.originalname)
+export const uploader = multer({
+  storage: storage,
+
+  fileFilter: (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png|webp/;
+    const mimeType = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+
+    if (mimeType && extname) {
+      return cb(null, true);
     }
-})
-
-export const uploader = multer({ storage })
+    cb("Error: el tipo de archivo no está permitido -" + fileTypes);
+  },
+});
