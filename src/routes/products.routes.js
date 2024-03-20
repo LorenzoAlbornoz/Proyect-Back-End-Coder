@@ -6,6 +6,7 @@ import { authToken } from '../utils.js'
 import handlePolicies from '../config/policies.auth.js'
 import CustomError from '../services/error.custom.class.js'
 import config from '../config.js'
+import nodemailer from 'nodemailer'
 
 const router = Router()
 const controller = new ProductController()
@@ -155,6 +156,33 @@ router.delete('/product/:id', authToken, handlePolicies(['admin', 'premium']), a
     const result = await controller.deleteProduct(productId);
     console.log('Producto eliminado con éxito:', result);
     res.status(200).send({ status: 'OK', data: result });
+
+     // Si el producto pertenece a un usuario premium, enviar un correo electrónico
+     if (req.user.role === 'premium') {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        port: 587,
+        auth: {
+            user: config.GOOGLE_APP_EMAIL,
+            pass: config.GOOGLE_APP_PASS
+        }
+    });
+
+    const mailOptions = {
+      from: 'fravega@gmail.com',
+      to: req.user.email,
+        subject: 'Producto eliminado',
+        text: `El producto ${existingProduct.title} ha sido eliminado de tu cuenta. Si no realizaste esta acción, por favor contáctanos.`
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    }
   } catch (err) {
     console.error('Error al intentar eliminar el producto:', err);
     return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
