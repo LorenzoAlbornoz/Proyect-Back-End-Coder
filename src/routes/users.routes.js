@@ -3,6 +3,9 @@ import { UserController } from '../controllers/userControllers.js'
 import { authToken } from '../utils.js'
 import handlePolicies from '../config/policies.auth.js'
 import { uploader } from '../uploader.js'
+import config from '../config.js'
+import nodemailer from 'nodemailer'
+import UserModel from '../models/userSchema.js'
 
 const router = Router()
 const userController = new UserController()
@@ -128,6 +131,43 @@ router.put('/user/:id', authToken, handlePolicies(['admin']), async (req, res, n
       console.log(error)
         res.status(500).json({ mensaje: "Hubo un error, inténtelo más tarde", status: 500 });
     }
+});
+
+router.delete('/inactiveUsers', authToken, async (req, res) => {
+  try {
+    // Obtener la fecha límite de hace un año
+    const cutoffTime = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000); // Un año en milisegundos
+    const inactiveUsers = await UserModel.find({ last_connection: { $lt: cutoffTime } });
+
+    // Iterar sobre los usuarios inactivos
+    for (const user of inactiveUsers) {
+      // Enviar correo electrónico de eliminación de cuenta
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: config.GOOGLE_APP_EMAIL,
+          pass: config.GOOGLE_APP_PASS
+        }
+      });
+
+      const mailOptions = {
+        from: 'tu_correo@gmail.com',
+        to: user.email,
+        subject: 'Eliminación de cuenta por inactividad',
+        text: `Tu cuenta ha sido eliminada debido a la inactividad. Si deseas recuperarla, ponte en contacto con el soporte.`
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      // Eliminar usuario
+      await UserModel.findByIdAndDelete(user._id);
+    }
+
+    res.status(200).json({ mensaje: 'Usuarios inactivos eliminados correctamente' });
+  } catch (error) {
+    console.error('Error al intentar eliminar usuarios inactivos:', error);
+    res.status(500).json({ mensaje: 'Hubo un error al eliminar usuarios inactivos', error: error.message });
+  }
 });
 
 
