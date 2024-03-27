@@ -1,6 +1,7 @@
 import cartModel from '../models/cartSchema.js'
 import userModel from '../models/userSchema.js';
 import ticketModel from '../models/ticketSchema.js'
+import productModel from '../models/productSchema.js'
 
 export class CartService {
     constructor() {
@@ -56,9 +57,10 @@ export class CartService {
                 return null; // El carrito no existe
             }
 
+            const product = await productModel.findById(productId);
+            
             // Verificar si el producto ya está en el carrito
             const existingProduct = cart.products.find(product => product.product.toString() === productId);
-
             if (existingProduct) {
                 // Si el producto ya está en el carrito, aumentar la cantidad
                 existingProduct.quantity += 1;
@@ -67,6 +69,8 @@ export class CartService {
                 const productToAdd = {
                     product: productId,
                     quantity: 1,
+                    currency:'usd',
+                    unit_amount: Math.round(product.price * 100), // Convertir el precio a centavos
                 };
 
                 cart.products.push(productToAdd);

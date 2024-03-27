@@ -1,4 +1,5 @@
 import { CartService } from "../services/carts.mongo.dao.js";
+import PaymentService from '../services/payment.service.js';
 
 const cartService = new CartService()
 
@@ -29,6 +30,52 @@ export class CartController {
       return err.message
     }
   }
+
+  async checkout(cartId) {
+    try {
+        // Obtener el carrito por su ID, asegurándose de que los productos estén poblados
+        const cart = await this.getCartById(cartId);
+
+        if (typeof cart !== 'string') {
+            // Construir los datos para la creación de la sesión de pago en Stripe
+
+           
+            const lineItems = cart.products.map(product => ({
+                price_data: {
+                    currency: product.currency,
+                    product_data: {
+                        name: product.product.title,
+                        images: [product.product.images[0]]
+                    },
+                    unit_amount: product.unit_amount / 100,
+                },
+                quantity: product.quantity,
+            }));
+
+            const data = {
+                line_items: lineItems,
+                mode: 'payment', // Puede ser 'subscription' para habilitar pagos recurrentes
+                success_url: 'http://localhost:8080/api/cart/success',
+                cancel_url: 'http://localhost:8080/api/cart/cancel'
+            };
+            console.log('Datos de pago:', JSON.stringify(data, null, 2));
+
+            // Crear la sesión de pago en Stripe
+            const service = new PaymentService();
+            const payment = await service.createPaymentSession(data);
+
+            return { status: 'OK', data: payment };
+        } else {
+            // Si hay un error al obtener el carrito, enviar una respuesta de error
+            return { status: 'ERR', data: cart };
+        }
+    } catch (err) {
+        console.error('Error al procesar el pago:', err);
+        return { status: 'ERR', data: err.message };
+    }
+} 
+
+  async
 
   async editProductQuantity(cartId, productId, newQuantity) {
     try {

@@ -115,4 +115,3 @@ MongoSingleton.getInstance();
 app.listen(port, () => {
     console.log(`Backend activo modo ${config.MODE} puerto ${port}`)
 })
-

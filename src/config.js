@@ -31,6 +31,7 @@ const config = {
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     SECRET_KEY: process.env.SECRET_KEY,
     UPLOAD_DIR: 'public/img',
+    STRIPE_KEY: process.env.STRIPE_SECRET_KEY,
     PERSISTENCE: process.env.PERSISTENCE,
     MODE: commandLineOptions.opts().mode || 'devel',
     GITHUB_AUTH: {

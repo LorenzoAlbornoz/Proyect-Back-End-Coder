@@ -30,7 +30,7 @@ router.get('/cart/quantity/:cartId', async (req, res) => {
     const cartQuantity = await controller.getCartQuantity(cartId);
 
     if (cartQuantity !== null) {
-      res.status(200).json({ quantity: cartQuantity }); 
+      res.status(200).json({ quantity: cartQuantity });
     } else {
       res.status(404).json({ error: 'Carrito no encontrado' });
     }
@@ -44,7 +44,7 @@ router.post('/cart/:cartId/user/:userId/purchase', async (req, res) => {
   try {
     const cartId = req.params.cartId;
     const userId = req.params.userId;
-    const result = await controller.processPurchase(cartId, userId); 
+    const result = await controller.processPurchase(cartId, userId);
     if (result.status === 'OK') {
       res.status(200).send(result);
     } else {
@@ -59,7 +59,7 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
   try {
     const cartId = req.params.cid;
     const productId = req.params.pid;
-    
+
     // Obtener información del producto antes de agregarlo al carrito
     const productInfo = await productController.getProductById(productId);
 
@@ -88,6 +88,27 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
   }
 });
 
+// router.get('/success', (req, res) => { res.redirect('/success.html') });
+// router.get('/cancel', (req, res) => { res.redirect('/cancel.html') });
+
+router.post('/payment-attempt/:cid', async (req, res) => {
+  try {
+    const cartId = req.params.cid;
+
+    // Llama a la función checkout pasando el ID del carrito
+    const result = await controller.checkout(cartId);
+
+    // Verifica el resultado y envía la respuesta apropiada
+    if (result.status === 'OK') {
+      res.status(200).send(result.data);
+    } else {
+      res.status(500).send({ status: 'ERR', data: result.data });
+    }
+  } catch (error) {
+    console.error('Error al procesar la solicitud de pago:', error);
+    res.status(500).send({ status: 'ERR', data: 'Error al procesar la solicitud de pago' });
+  }
+});
 
 router.put('/cart/:cartId/product/:productId', async (req, res) => {
   const cartId = req.params.cartId;

@@ -1,21 +1,29 @@
-import mongoose from 'mongoose';
-import Product from './productSchema.js';
+import mongoose from "mongoose";
+import Product from "./productSchema.js";
 
 mongoose.pluralize(null);
 
-const collection = 'carts';
+const collection = "carts";
 
 const cartSchema = new mongoose.Schema({
   products: [
     {
       product: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'products',
+        ref: "products",
         required: true,
       },
       quantity: {
         type: Number,
         required: true,
+      },
+      currency: {
+        type: String,
+        default: "usd",
+      },
+      unit_amount: {
+        type: Number,
+        default: 0,
       },
     },
   ],
@@ -29,9 +37,9 @@ const cartSchema = new mongoose.Schema({
   },
 });
 
-cartSchema.pre('find', function() {
-  this.populate({ path: 'products', model: Product })
-})
+cartSchema.pre("find", function () {
+  this.populate({ path: "products", model: Product });
+});
 
 // Método para calcular el total del carrito (precio total)
 cartSchema.methods.calculateTotal = async function () {
@@ -42,7 +50,9 @@ cartSchema.methods.calculateTotal = async function () {
     let total = 0;
 
     this.products.forEach((item) => {
-      const product = products.find((p) => p._id.toString() === item.product.toString());
+      const product = products.find(
+        (p) => p._id.toString() === item.product.toString()
+      );
 
       if (product && product.stock > 0) {
         // Solo sumar si el producto tiene stock positivo
@@ -54,7 +64,10 @@ cartSchema.methods.calculateTotal = async function () {
     this.total = total;
 
     // Calcular la cantidad total sumando las cantidades de todos los productos
-    const totalQuantity = this.products.reduce((acc, item) => acc + item.quantity, 0);
+    const totalQuantity = this.products.reduce(
+      (acc, item) => acc + item.quantity,
+      0
+    );
 
     // Actualizar directamente el campo totalQuantity en el esquema
     this.totalQuantity = totalQuantity;
