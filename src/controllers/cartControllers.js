@@ -38,13 +38,16 @@ export class CartController {
 
         if (typeof cart !== 'string') {
             // Construir los datos para la creación de la sesión de pago en Stripe
+
+           
             const lineItems = cart.products.map(product => ({
                 price_data: {
                     currency: product.currency,
                     product_data: {
                         name: product.product.title,
+                        images: [product.product.images[0]]
                     },
-                    unit_amount: product.unit_amount,
+                    unit_amount: product.unit_amount / 100,
                 },
                 quantity: product.quantity,
             }));
