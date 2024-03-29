@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema({
       }],
       last_connection: {
         type: Date,
+      },
+      ticket:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'tickets'
       }
 })
 

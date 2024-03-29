@@ -37,26 +37,32 @@ export class CartController {
         const cart = await this.getCartById(cartId);
 
         if (typeof cart !== 'string') {
-            // Construir los datos para la creación de la sesión de pago en Stripe
+          // Filtrar los productos que tienen stock mayor que 0
+          const productsWithStock = cart.products.filter(product => product.product.stock > 0);
 
-           
-            const lineItems = cart.products.map(product => ({
-                price_data: {
-                    currency: product.currency,
-                    product_data: {
-                        name: product.product.title,
-                        images: [product.product.images[0]]
-                    },
-                    unit_amount: product.unit_amount / 100,
-                },
-                quantity: product.quantity,
-            }));
+          // Verificar si hay productos con stock para procesar el pago
+          if (productsWithStock.length === 0) {
+              return { status: 'ERR', data: 'No hay productos disponibles para comprar en el carrito' };
+          }
 
-            const data = {
-                line_items: lineItems,
-                mode: 'payment', // Puede ser 'subscription' para habilitar pagos recurrentes
-                success_url: 'http://localhost:8080/api/cart/success',
-                cancel_url: 'http://localhost:8080/api/cart/cancel'
+          // Construir los datos para la creación de la sesión de pago en Stripe
+          const lineItems = productsWithStock.map(product => ({
+              price_data: {
+                  currency: product.currency,
+                  product_data: {
+                      name: product.product.title,
+                      images: [product.product.images[0]]
+                  },
+                  unit_amount: product.unit_amount / 100,
+              },
+              quantity: product.quantity,
+          }));
+
+          const data = {
+              line_items: lineItems,
+              mode: 'payment', // Puede ser 'subscription' para habilitar pagos recurrentes
+              success_url: 'http://localhost:5173/cart/success',
+              cancel_url: 'http://localhost:5173/cart/cancel'
             };
             console.log('Datos de pago:', JSON.stringify(data, null, 2));
 

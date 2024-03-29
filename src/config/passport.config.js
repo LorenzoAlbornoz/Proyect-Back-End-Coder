@@ -8,9 +8,11 @@ import { encryptPassword, comparePassword, generateToken } from '../utils.js';
 import config from '../config.js'
 import { CartController } from '../controllers/cartControllers.js';
 import { FavoriteController } from '../controllers/favoriteControllers.js';
+import { TicketController } from '../controllers/ticketControllers.js'
 
 const cartController = new CartController();
 const favoriteController = new FavoriteController();
+const ticketController = new TicketController();
 
 const initPassport = () => {
     // Función utilizada por la estrategia registerAuth
@@ -39,9 +41,14 @@ const initPassport = () => {
             const createdUser = await userModel.create(newUser);
     
             const newCart = await cartController.createCart(createdUser);
-    
+
             // Asigna la referencia del carrito al campo 'cart' del usuario
             createdUser.cart = newCart._id;
+            
+             // Asigna la referencia del ticket al campo 'tickt' del usuario
+            const newTicket = await ticketController.createdTicket(newTicket)
+    
+            createdUser.ticket = newTicket._id;
 
             const newFavorite = await favoriteController.createFavorite(createdUser);
     
@@ -109,6 +116,7 @@ const initPassport = () => {
             const createdUser = await userModel.create(newUser);
     
             console.log('Autenticación exitosa con Google');
+
     
             // Realiza acciones adicionales después de la creación del usuario (por ejemplo, carritos y favoritos)
             const newCart = await cartController.createCart(createdUser);
@@ -116,6 +124,9 @@ const initPassport = () => {
     
             const newFavorite = await favoriteController.createFavorite(createdUser);
             createdUser.favorite = newFavorite._id;
+
+            const newTicket = await ticketController.createdTicket(newTicket)
+             createdUser.ticket = newTicket._id;
     
             await createdUser.save();
     
@@ -156,17 +167,18 @@ const initPassport = () => {
             };
     
             const createdUser = await userModel.create(newUser);
-    
+            
             console.log('Autenticación exitosa con Facebook');
-    
+            
             // Realiza acciones adicionales después de la creación del usuario (por ejemplo, carritos y favoritos)
             const newCart = await cartController.createCart(createdUser);
             createdUser.cart = newCart._id;
-    
+            
             const newFavorite = await favoriteController.createFavorite(createdUser);
             createdUser.favorite = newFavorite._id;
-    
-            await createdUser.save();
+            
+            const newTicket = await ticketController.createdTicket(newTicket)
+            createdUser.ticket = newTicket._id;
     
             // Devolver el nuevo usuario creado
             return done(null, createdUser);
