@@ -225,14 +225,26 @@ export class CartService {
             cart.products = unprocessedProducts;
             await cart.save();
     
-            ticket = await ticketModel.create({
-                purchase_datetime: new Date(),
-                amount: totalAmount,
-                purchaser: user._id,
-                items: ticketItems,
-            });
-    
-            return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket._id };
+        // Filtrar los productos que tienen stock igual a 0
+        const filteredTicketItems = ticketItems.filter(item => item.quantity > 0);
+
+        // Calcular totalQuantity
+        const totalQuantity = filteredTicketItems.reduce((total, item) => total + item.quantity, 0);
+
+        // Crear el ticket con todos los campos y los productos filtrados
+        const ticket = await ticketModel.create({
+            purchase_datetime: new Date(),
+            amount: totalAmount,
+            purchaser: user._id,
+            products: filteredTicketItems.map(item => ({
+                product: item.product,
+                quantity: item.quantity
+            })),
+            total: totalAmount,
+            totalQuantity: totalQuantity,
+        });
+
+            return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket };
         } catch (error) {
             return { success: false, error: error.message };
         }

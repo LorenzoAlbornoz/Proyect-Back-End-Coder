@@ -22,6 +22,15 @@ export class TicketService{
         }
     }
 
+    async createdTicket () {
+        try {
+          const ticket = await ticketModel.create();
+          return ticket;
+        } catch (error) {
+            return err.message
+        }
+      };
+
     async deleteTicket(id){
         try {
             const deleteTicket = await ticketModel.findByIdAndDelete(id)

@@ -14,6 +14,14 @@ export class TicketController{
         }
     }
 
+    async createdTicket(){
+        try {
+            return await ticketService.createdTicket({})
+        } catch (error) {
+            return err.message
+        }
+    }
+
     async getTicketsById(id) {
         try {
             return await ticketService.getTicketsById(id)
