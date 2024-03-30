@@ -2,11 +2,11 @@ import { CategoryService } from "../services/categories.mongo.dao.js";
 
 const categoryService = new CategoryService()
 
-export class CategoryController{
-  constructor(){
+export class CategoryController {
+  constructor() {
   }
 
-  async getCategories(){
+  async getCategories() {
     try {
       return await categoryService.getCategories()
     } catch (err) {
@@ -14,7 +14,7 @@ export class CategoryController{
     }
   }
 
-  async getCategoryById(id){
+  async getCategoryById(id) {
     try {
       return await categoryService.getCategoryById(id)
     } catch (err) {
@@ -22,7 +22,7 @@ export class CategoryController{
     }
   }
 
-  async createCategory(category){
+  async createCategory(category) {
     try {
       return await categoryService.createCategory(category)
     } catch (err) {
@@ -32,13 +32,13 @@ export class CategoryController{
 
   async updateCategory(id, newContent) {
     try {
-        return await categoryService.updateCategory(id, newContent)
+      return await categoryService.updateCategory(id, newContent)
     } catch (err) {
-        return err.message
+      return err.message
     }
-}
+  }
 
-  async deleteCategory(id){
+  async deleteCategory(id) {
     try {
       return await categoryService.deleteCategory(id)
     } catch (err) {

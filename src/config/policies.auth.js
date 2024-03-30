@@ -2,7 +2,6 @@ const handlePolicies = policies => {
     return async (req, res, next) => {
         if (!req.user) return res.status(401).send({ status: 'ERR', data: 'Usuario no autorizado' })
 
-        // Normalizamos todo a mayúsculas para comparar efectivamente
         const userRole = req.user.role.toUpperCase();
         policies.forEach((policy, index) => policies[index] = policies[index].toUpperCase());
 

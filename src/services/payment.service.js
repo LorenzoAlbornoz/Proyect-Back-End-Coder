@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import  config  from '../config.js';
+import config from '../config.js';
 
 export default class PaymentService {
     constructor() {
@@ -9,8 +9,4 @@ export default class PaymentService {
     createPaymentSession = async (data) => {
         return this.stripe.checkout.sessions.create(data);
     }
-
-    /* createPaymentIntent = async (data) => {
-        return this.stripe.paymentIntents.create(data)
-    } */
 };

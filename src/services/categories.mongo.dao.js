@@ -7,7 +7,6 @@ export class CategoryService {
     async getCategories() {
         try {
             const categories = await categoryModel.find()
-
             return categories
         } catch (err) {
             return err.message;
@@ -34,70 +33,42 @@ export class CategoryService {
 
     async updateCategory(id, newContent) {
         try {
-            // Obtener la categoría antes de la actualización para acceder a la URL de la imagen
             const category = await categoryModel.findById(id);
-    
-            // Console.log para la URL de la imagen antes de la actualización
-            console.log('URL de la imagen antes de la actualización:', category.image);
-    
-            // Verificar si se proporciona una nueva imagen en la actualización
+
             if (newContent.image) {
-                // Actualizar el producto en la base de datos
                 const updatedCategory = await categoryModel.findByIdAndUpdate(id, newContent, { new: true });
-    
-                // Verificar si la categoría original tenía una URL de imagen
+
                 if (category && category.image) {
-                    // Extraer el public_id de la URL de la imagen en Cloudinary
+
                     const publicId = category.image.split('/').pop().replace(/\.[^/.]+$/, '');
-    
-                    // Eliminar la imagen antigua de Cloudinary
                     await cloudinary.uploader.destroy(publicId);
                 }
-    
-                // Console.log para el resultado de la actualización en la base de datos
-                console.log('Resultado de la actualización en la base de datos:', updatedCategory);
-    
+
                 return updatedCategory;
             } else {
-                // Si no se proporciona una nueva imagen, simplemente actualizar la categoría sin eliminar la imagen anterior
                 const updatedCategory = await categoryModel.findByIdAndUpdate(id, newContent, { new: true });
-    
-                // Console.log para el resultado de la actualización en la base de datos
-                console.log('Resultado de la actualización en la base de datos:', updatedCategory);
-    
+
                 return updatedCategory;
             }
         } catch (err) {
-            // Console.log para manejar errores
-            console.error('Error en la actualización:', err.message);
             return err.message;
         }
     }
 
     async deleteCategory(id) {
         try {
-                     // Obtener el producto antes de eliminarlo para acceder a la URL de la imagen
-                     const category = await categoryModel.findById(id);
+            const category = await categoryModel.findById(id);
 
-                     // Console.log para la URL de la imagen antes de la eliminación
-                     console.log('URL de la imagen antes de la eliminación:', category.image);
-         
-                     // Eliminar el producto de la base de datos
-                     const deletedCategory = await categoryModel.findByIdAndDelete(id);
-         
-                     // Verificar si el producto existe y tiene una URL de imagen
-                     if (category && category.image) {
-                         // Extraer el public_id de la URL de la imagen en Cloudinary
-                         const publicId = category.image.split('/').pop().replace(/\.[^/.]+$/, '');
-         
-                         // Eliminar la imagen de Cloudinary
-                         await cloudinary.uploader.destroy(publicId);
-                     }
-         
-                     // Console.log para el resultado de la eliminación en la base de datos
-                     console.log('Resultado de la eliminación en la base de datos:', deletedCategory);
-         
-                     return deletedCategory;
+            const deletedCategory = await categoryModel.findByIdAndDelete(id);
+
+            if (category && category.image) {
+
+                const publicId = category.image.split('/').pop().replace(/\.[^/.]+$/, '');
+
+                await cloudinary.uploader.destroy(publicId);
+            }
+
+            return deletedCategory;
         } catch (err) {
             return err.message
         }

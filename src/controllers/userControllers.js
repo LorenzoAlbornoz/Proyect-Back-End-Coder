@@ -45,7 +45,7 @@ export class UserController {
         }
     }
 
-    async changeToRole(id){
+    async changeToRole(id) {
         try {
             return await userService.changeToRole(id)
         } catch (error) {

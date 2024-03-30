@@ -33,55 +33,45 @@ export class CartController {
 
   async checkout(cartId) {
     try {
-        // Obtener el carrito por su ID, asegurándose de que los productos estén poblados
-        const cart = await this.getCartById(cartId);
+      const cart = await this.getCartById(cartId);
 
-        if (typeof cart !== 'string') {
-          // Filtrar los productos que tienen stock mayor que 0
-          const productsWithStock = cart.products.filter(product => product.product.stock > 0);
+      if (typeof cart !== 'string') {
+        const productsWithStock = cart.products.filter(product => product.product.stock > 0);
 
-          // Verificar si hay productos con stock para procesar el pago
-          if (productsWithStock.length === 0) {
-              return { status: 'ERR', data: 'No hay productos disponibles para comprar en el carrito' };
-          }
-
-          // Construir los datos para la creación de la sesión de pago en Stripe
-          const lineItems = productsWithStock.map(product => ({
-              price_data: {
-                  currency: product.currency,
-                  product_data: {
-                      name: product.product.title,
-                      images: [product.product.images[0]]
-                  },
-                  unit_amount: product.unit_amount / 100,
-              },
-              quantity: product.quantity,
-          }));
-
-          const data = {
-              line_items: lineItems,
-              mode: 'payment', // Puede ser 'subscription' para habilitar pagos recurrentes
-              success_url: 'http://localhost:5173/cart/success',
-              cancel_url: 'http://localhost:5173/cart/cancel'
-            };
-            console.log('Datos de pago:', JSON.stringify(data, null, 2));
-
-            // Crear la sesión de pago en Stripe
-            const service = new PaymentService();
-            const payment = await service.createPaymentSession(data);
-
-            return { status: 'OK', data: payment };
-        } else {
-            // Si hay un error al obtener el carrito, enviar una respuesta de error
-            return { status: 'ERR', data: cart };
+        if (productsWithStock.length === 0) {
+          return { status: 'ERR', data: 'No hay productos disponibles para comprar en el carrito' };
         }
-    } catch (err) {
-        console.error('Error al procesar el pago:', err);
-        return { status: 'ERR', data: err.message };
-    }
-} 
 
-  async
+        const lineItems = productsWithStock.map(product => ({
+          price_data: {
+            currency: product.currency,
+            product_data: {
+              name: product.product.title,
+              images: [product.product.images[0]]
+            },
+            unit_amount: product.unit_amount / 100,
+          },
+          quantity: product.quantity,
+        }));
+
+        const data = {
+          line_items: lineItems,
+          mode: 'payment',
+          success_url: 'http://localhost:5173/cart/success',
+          cancel_url: 'http://localhost:5173/cart/cancel'
+        };
+
+        const service = new PaymentService();
+        const payment = await service.createPaymentSession(data);
+
+        return { status: 'OK', data: payment };
+      } else {
+        return { status: 'ERR', data: cart };
+      }
+    } catch (err) {
+      return { status: 'ERR', data: err.message };
+    }
+  }
 
   async editProductQuantity(cartId, productId, newQuantity) {
     try {
@@ -107,14 +97,13 @@ export class CartController {
     }
   }
 
-  async clearCart(cartId){
+  async clearCart(cartId) {
     try {
       return await cartService.clearCart(cartId)
     } catch (error) {
-      return err.message 
+      return err.message
     }
   }
-
 
   async getCartQuantity(cartId) {
     try {
@@ -124,7 +113,7 @@ export class CartController {
     }
   }
 
-  async processPurchase(cartId, ticketId){
+  async processPurchase(cartId, ticketId) {
     try {
       const result = await cartService.processPurchase(cartId, ticketId)
       if (result.success) {
@@ -133,7 +122,6 @@ export class CartController {
         return { status: 'ERR', data: { error: result.error } };
       }
     } catch (error) {
-      console.error("Error in processPurchase:", error);
       return { status: 'ERR', data: { error: error.message } };
     }
   }

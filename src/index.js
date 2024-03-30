@@ -1,5 +1,4 @@
 import express from 'express';
-import handlebars from 'express-handlebars'
 import cors from "cors"
 import cloudinary from 'cloudinary'
 import cookieParser from 'cookie-parser';
@@ -14,7 +13,6 @@ import { __dirname } from './utils.js'
 import productsRouter from './routes/products.routes.js';
 import categoryRouter from './routes/category.routes.js'
 import cartsRouter from './routes/carts.routes.js';
-// import viewsRouter from './routes/views.routes.js'
 import favoriteRouter from './routes/favorite.routes.js'
 import sessionsRouter from './routes/sessions.routes.js'
 import usersRouter from './routes/users.routes.js';
@@ -35,7 +33,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(config.SECRET_KEY))
 
-// Generamos la configuración inicial para swaggerJsdoc
 const swaggerOptions = {
   definition: {
       openapi: '3.0.1',
@@ -44,31 +41,20 @@ const swaggerOptions = {
           description: 'Esta documentación cubre toda la API habilitada para AdoptMe',
       },
   },
-  apis: ['./src/docs/**/*.yaml'], // todos los archivos de configuración de rutas estarán aquí
+  apis: ['./src/docs/**/*.yaml'],
 };
 const specs = swaggerJsdoc(swaggerOptions);
     
 
 const fileStorage = FileStore(session)
 app.use(session({
-    store: MongoStore.create({ mongoUrl: config.MONGODB_CONNECTION, mongoOptions: {}, ttl: 60, clearInterval: 5000 }), // MONGODB
+    store: MongoStore.create({ mongoUrl: config.MONGODB_CONNECTION, mongoOptions: {}, ttl: 60, clearInterval: 5000 }),
     secret: config.SECRET_KEY,
     resave: false,
     saveUninitialized: false
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-
-// Configurar Handlebars
-app.engine('handlebars', handlebars.engine({
-    // Agregar las siguientes opciones de tiempo de ejecución
-    runtimeOptions: {
-      allowProtoPropertiesByDefault: true,
-      allowProtoMethodsByDefault: true,
-    },
-  }));
-  app.set('views', `${__dirname}/views`)
-  app.set('view engine', 'handlebars')
 
 cloudinary.config({
     cloud_name:config.CLOUD_NAME,

@@ -8,11 +8,11 @@ const collection = 'products'
 const productSchema = new mongoose.Schema({
     title: {
         type: String,
-        required:true 
+        required: true
     },
     description: {
         type: String,
-        required:true 
+        required: true
     },
     price: {
         type: Number,
@@ -27,8 +27,8 @@ const productSchema = new mongoose.Schema({
         type: [String]
     },
     code: {
-       type: String,
-       required: true
+        type: String,
+        required: true
     },
     stock: {
         type: Number,
@@ -36,7 +36,7 @@ const productSchema = new mongoose.Schema({
     },
     isFeatured: {
         type: Boolean,
-        default: false 
+        default: false
     },
     isOffer: {
         type: Boolean,

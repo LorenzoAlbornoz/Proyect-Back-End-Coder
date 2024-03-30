@@ -10,12 +10,12 @@ commandLineOptions.parse();
 
 switch (commandLineOptions.opts().mode) {
     case 'prod':
-        dotenv.config({ path: './.env.prod'});
+        dotenv.config({ path: './.env.prod' });
         break;
-    
+
     case 'devel':
     default:
-        dotenv.config({ path: './.env.devel'});
+        dotenv.config({ path: './.env.devel' });
 }
 
 const config = {

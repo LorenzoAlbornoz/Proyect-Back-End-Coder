@@ -1,24 +1,24 @@
-import {TicketService} from '../services/tickets.mongo.dao.js'
+import { TicketService } from '../services/tickets.mongo.dao.js'
 
 const ticketService = new TicketService()
 
-export class TicketController{
-    constructor(){
+export class TicketController {
+    constructor() {
     }
 
     async getTickets() {
         try {
             return await ticketService.getTickets()
-        } catch (error) {
+        } catch (err) {
             return err.message
         }
     }
 
-    async createdTicket(user){
+    async createdTicket(user) {
         try {
             console.log(user)
             return await ticketService.createdTicket(user)
-        } catch (error) {
+        } catch (err) {
             return err.message
         }
     }
@@ -26,7 +26,7 @@ export class TicketController{
     async getTicketsById(ticketId) {
         try {
             return await ticketService.getTicketsById(ticketId)
-        } catch (error) {
+        } catch (err) {
             return err.message
         }
     }
@@ -34,7 +34,7 @@ export class TicketController{
     async deleteTicket(id) {
         try {
             return await ticketService.deleteTicket(id)
-        } catch (error) {
+        } catch (err) {
             return err.message
         }
     }
