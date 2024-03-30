@@ -1,0 +1,276 @@
+paths:
+  /api/cart/{cid}:
+    get:
+      summary: 'Obtiene información de un carrito por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        "404":
+          description: 'Carrito no encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error interno del servidor'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/cart/quantity/{cartId}:
+    get:
+      summary: 'Obtiene la cantidad de productos en un carrito por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quantity:
+                    type: number
+        "404":
+          description: 'Carrito no encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error interno del servidor'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/cart/{cartId}/user/{userId}/purchase:
+    post:
+      summary: 'Procesa la compra de un carrito por ID y un usuario por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        "500":
+          description: 'Error interno del servidor'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+
+  /api/cart/{cid}/product/{pid}:
+    post:
+      summary: 'Añade un producto a un carrito por ID y un producto por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: 'Producto agregado exitosamente al carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+        "500":
+          description: 'Error al agregar el producto al carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/cart/{cartId}/product/{productId}:
+    put:
+      summary: 'Actualiza la cantidad de un producto en un carrito por ID y un producto por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 'Datos obligatorios en el body'
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: number
+      responses:
+        "200":
+          description: 'Cantidad del producto actualizada exitosamente en el carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: 'El producto no está en el carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error al actualizar la cantidad del producto en el carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+    /api/cart/{cid}/product/{pid}:
+    delete:
+      summary: 'Elimina un producto de un carrito por ID y un producto por ID'
+      tags:
+        - Cart
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 'Producto eliminado exitosamente del carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+        "404":
+          description: 'El producto no está en el carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: 'Error al eliminar el producto del carrito'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    Cart:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              product:
+                type: string
+                description: 'ID del producto'
+              quantity:
+                type: number
+                description: 'Cantidad del producto en el carrito'
+          description: 'Lista de productos en el carrito'
+        total:
+          type: number
+          description: 'Total del carrito'
+        totalQuantity:
+          type: number
+          description: 'Cantidad total de productos en el carrito'
+      example:
+        products:
+          - product: '638b8c323f3a4b3be6dc397e'
+            quantity: 2
+          - product: '738b8c323f3a4b3be6dc397f'
+            quantity: 1
+        total: 30.5
+        totalQuantity: 3
+

@@ -1,100 +1,198 @@
 import { Router } from 'express'
 import { uploader } from '../uploader.js'
-import ProductManager from '../../ProductManager.js'
+import { ProductController } from '../controllers/productControllers.js'
+import cloudinary from 'cloudinary'
+import { authToken } from '../utils.js'
+import handlePolicies from '../config/policies.auth.js'
+import CustomError from '../services/error.custom.class.js'
+import config from '../config.js'
+import nodemailer from 'nodemailer'
 
 const router = Router()
+const controller = new ProductController()
 
-const productManager = new ProductManager('./products.json');
+router.get('/products', async (req, res) => {
+  try {
+    const products = await controller.getProducts()
+    res.status(200).send({ status: 'OK', products })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
+})
 
-router.get('/', async (req, res) => {
-    try {
-      const limit = req.query.limit;
-      const allProducts = await productManager.getProducts();
-  
-      if (limit) {
-        const limitInt = parseInt(limit);
-  
-        // numero entero y positivo
-        if (!isNaN(limitInt) && limitInt > 0) {
-            // seleccionamos solo la cantidad de productos especificados por limit
-          const limitedProducts = allProducts.slice(0, limitInt);
-          res.send(limitedProducts);
-        } else {
-          res.status(400).json({ error: 'El parámetro limit debe ser un número entero positivo' });
-        }
-      } else {
-        res.send(allProducts);
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los productos' });
-    }
-  });
-
-router.get('/:pid', async (req, res) => {
-    try {
-        const productId = (parseInt(req.params.pid))
-        const product = await productManager.getProductById(productId);
-        if (product) {
-            res.send(product);
-        } else {
-            res.status(404).json({ error: 'El producto no existe' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Error al obtener el producto' });
-    }
+router.get('/products/search', async (req, res) => {
+  try {
+    const { productName } = req.query;
+    const filteredProducts = await controller.searchProductsByName(productName);
+    res.status(200).send({ status: 'OK', products: filteredProducts });
+  } catch (err) {
+    res.status(500).send({ status: 'ERR', data: err.message });
+  }
 });
 
-router.post('/', uploader.array('fotos', 10), async (req, res) => {
-    try {
-        const addProduct = req.body;
-        const fotos = req.files;
-        const nombresFotos = fotos.map((foto) => foto.filename);
-        addProduct.fotos = nombresFotos;
-
-        await productManager.addProduct(addProduct);
-
-        res.status(200).send({ data: addProduct });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al agregar el producto' });
-    }
+router.get('/products/category', async (req, res) => {
+  try {
+    const { categoryName } = req.query;
+    const filteredProducts = await controller.getProductsByCategory(categoryName);
+    res.status(200).send({ status: 'OK', products: filteredProducts });
+  } catch (err) {
+    res.status(500).send({ status: 'ERR', data: err.message });
+  }
 });
 
-router.put('/:id', uploader.single('fotos'), async (req, res) => {
-    try {
-      const productId = parseInt(req.params.id); 
-      console.log(productId)
-      const fotos = req.file;
-      console.log(fotos)
-      const nombreFoto = fotos.originalname; // Usa req.file.filename
-      console.log(nombreFoto);
-      const updatedProductData = req.body; 
-  
-      const updatedProduct = await productManager.updateProduct(productId, updatedProductData);
-  
-      if (updatedProduct) {
-        res.status(200).send({ data: updatedProduct });
-      } else {
-        res.status(404).send({ error: 'Producto no encontrado' });
-      }
-    } catch (error) {
-      res.status(500).send({ error: 'Error al actualizar el producto', details: error.message });
+router.get('/product/:id', async (req, res) => {
+  try {
+    const product = await controller.getProductById(req.params.id);
+    res.status(200).send({ status: 'OK', product })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
+})
+
+router.post('/product', authToken, handlePolicies(['admin', 'premium']), uploader.array('images', 5), async (req, res, next) => {
+  try {
+    const images = req.files.map((file) => file.path);
+
+    const { title, description, price, category, code, stock } = req.body;
+    if (!title || !description || !price || !category || !code || !stock) {
+      return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
     }
-  });
 
-  router.delete('/:pid', async (req, res) => {
-    try {
-        const productId = parseInt(req.params.pid);
-        const deletedProduct = await productManager.deleteProduct(productId);
+    const cloudImages = await Promise.all(images.map((image) => cloudinary.uploader.upload(image)));
 
-        if (deletedProduct !== null) {
-            res.status(200).send({ message: 'Producto eliminado con éxito' });
-        } else {
-            res.status(404).send({ error: 'Producto no encontrado' });
+    const ownerId = req.user.sub
+
+    const newContent = {
+      title,
+      description,
+      price,
+      category,
+      images: cloudImages.map((img) => img.secure_url),
+      code,
+      stock,
+      owner: ownerId,
+    };
+
+    const result = await controller.addProduct(newContent);
+    res.status(200).send({ status: 'OK', data: result });
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
+  }
+});
+
+
+router.put('/product/:id', authToken, handlePolicies(['admin', 'premium']), uploader.array('images', 5), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { files, body: { title, description, price, category, code, stock, isFeatured, isOffer } } = req;
+
+    if (![title, description, price, category, code, stock].every(Boolean)) {
+      return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
+    }
+
+    const cloudImages = files && await Promise.all(files.map((file) => cloudinary.uploader.upload(file.path)));
+    const existingProduct = await controller.getProductById(id);
+
+    if (req.user.role === 'premium' && req.user.sub !== existingProduct.owner.toString()) {
+      return res.status(403).send({ status: 'ERR', data: 'No tienes permisos para modificar este producto.' });
+    }
+
+    const ownerId = req.user.sub;
+
+    const updatedProduct = {
+      title,
+      description,
+      price,
+      category,
+      images: cloudImages ? cloudImages.map((img) => img.secure_url) : existingProduct.images,
+      code,
+      stock,
+      isFeatured: isFeatured || existingProduct.isFeatured,
+      isOffer: isOffer || existingProduct.isOffer,
+      owner: ownerId,
+    };
+
+    const product = await controller.updateProduct(id, updatedProduct, { new: true });
+    res.status(200).send({ status: 'OK', data: product });
+  } catch (error) {
+    res.status(500).send({ status: 'ERR', data: 'Hubo un error al modificar el producto. Puede que este producto no sea de tu propiedad.' });
+  }
+});
+
+
+router.put('/product/featured/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await controller.toggleProductFeaturedStatus(id);
+    res.json({ status: 'OK', data: product });
+  } catch (error) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
+  }
+});
+
+router.put('/product/offer/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await controller.toggleProductOfferStatus(id);
+    res.json({ status: 'OK', data: product });
+  } catch (error) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
+  }
+});
+
+router.delete('/product/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const existingProduct = await controller.getProductById(productId);
+
+    if (req.user.role === 'premium' && req.user.sub !== existingProduct.owner?.toString()) {
+      console.log('Usuario premium intentó borrar un producto que no le pertenece.');
+      return res.status(403).send({ status: 'ERR', data: 'No tienes permisos para borrar este producto.' });
+    }
+
+    const result = await controller.deleteProduct(productId);
+    console.log('Producto eliminado con éxito:', result);
+    res.status(200).send({ status: 'OK', data: result });
+
+    if (req.user.role === 'premium') {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        port: 587,
+        auth: {
+          user: config.GOOGLE_APP_EMAIL,
+          pass: config.GOOGLE_APP_PASS
         }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Error al obtener el producto' });
+      });
+
+      const mailOptions = {
+        from: 'fravega@gmail.com',
+        to: req.user.email,
+        subject: 'Producto eliminado',
+        text: `El producto ${existingProduct.title} ha sido eliminado de tu cuenta. Si no realizaste esta acción, por favor contáctanos.`
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
     }
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
+  }
 });
+
+router.get('/mockingProducts/:qty([1-9]*)', async (req, res) => {
+  try {
+    const products = await controller.mockingProducts(req.params.qty);
+    res.status(200).send({ status: 'OK', data: products })
+  } catch (err) {
+    return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR))
+  }
+})
+
+
+
 export default router
