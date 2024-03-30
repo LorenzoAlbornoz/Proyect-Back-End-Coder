@@ -109,7 +109,8 @@ router.post('/login', async (req, res) => {
             role: user.role,
             cart: user.cart,
             favorite: user.favorite,
-            ticket: user.ticket
+            ticket: user.ticket,
+            exp: expirationDate.getTime() / 1000 // Convertir a segundos
         }, '1h')
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.json({ token: access_token });

@@ -1,6 +1,7 @@
 import userModel from "../models/userSchema.js";
 import cartModel from "../models/cartSchema.js";
 import favoriteModel from "../models/favoriteSchema.js"
+import ticketModel from "../models/ticketSchema.js"
 import { encryptPassword} from "../utils.js"; 
 import mongoose from 'mongoose';
 
@@ -62,6 +63,11 @@ export class UserService{
             // Eliminar la lista de favoritos si existe
             if (user.favorite) {
                 await favoriteModel.findByIdAndDelete(user.favorite);
+            }
+
+             // Eliminar la lista de favoritos si existe
+             if (user.ticket) {
+                await ticketModel.findByIdAndDelete(user.ticket);
             }
     
             // Eliminar al usuario
