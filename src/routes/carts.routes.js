@@ -23,7 +23,6 @@ router.get('/cart/:cid', async (req, res) => {
   }
 });
 
-
 router.get('/cart/quantity/:cartId', async (req, res) => {
   try {
     const cartId = req.params.cartId;
@@ -35,7 +34,6 @@ router.get('/cart/quantity/:cartId', async (req, res) => {
       res.status(404).json({ error: 'Carrito no encontrado' });
     }
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
@@ -60,21 +58,12 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
     const cartId = req.params.cid;
     const productId = req.params.pid;
 
-    // Obtener información del producto antes de agregarlo al carrito
     const productInfo = await productController.getProductById(productId);
 
-    console.log('Role del usuario:', req.user.role);
-    console.log('ID del producto:', productId);
-    console.log('ID del usuario desde el token:', req.user.sub);
-    console.log('ID del dueño del producto:', productInfo.owner);
-
-
-    // Verificar si el usuario es premium y el producto le pertenece
     if (req.user.role === 'premium' && productInfo.owner.toString() === req.user.sub) {
       return res.status(403).json({ error: 'No puedes agregar tu propio producto al carrito.' });
     }
 
-    // Continuar con la lógica original para agregar el producto al carrito
     const addProductResult = await controller.addProductToCart(cartId, productId);
 
     if (addProductResult !== null) {
@@ -83,7 +72,6 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
       res.status(500).json({ error: 'Error al agregar el producto' });
     }
   } catch (error) {
-    console.error('Error al procesar la solicitud:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -92,17 +80,14 @@ router.post('/payment-attempt/:cid', async (req, res) => {
   try {
     const cartId = req.params.cid;
 
-    // Llama a la función checkout pasando el ID del carrito
     const result = await controller.checkout(cartId);
 
-    // Verifica el resultado y envía la respuesta apropiada
     if (result.status === 'OK') {
       res.status(200).send(result.data);
     } else {
       res.status(500).send({ status: 'ERR', data: result.data });
     }
   } catch (error) {
-    console.error('Error al procesar la solicitud de pago:', error);
     res.status(500).send({ status: 'ERR', data: 'Error al procesar la solicitud de pago' });
   }
 });
@@ -115,14 +100,12 @@ router.put('/cart/:cartId/product/:productId', async (req, res) => {
   try {
     const updatedCart = await controller.editProductQuantity(cartId, productId, newQuantity);
 
-    // Verificar si el producto se actualizó correctamente en el carrito
     if (updatedCart !== null) {
       res.status(200).json({ message: 'Cantidad del producto actualizada exitosamente' });
     } else {
       res.status(404).json({ error: 'El producto no está en el carrito' });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: 'Error al actualizar la cantidad del producto en el carrito' });
   }
 });
@@ -154,7 +137,6 @@ router.delete('/cleanCart/:cid', async (req, res) => {
       res.status(500).json({ error: 'Error al vaciar el carrito' });
     }
   } catch (error) {
-    console.error('Error al procesar la solicitud:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

@@ -26,11 +26,11 @@ export class TicketService {
         try {
             const newTicket = {
                 purchase_datetime: new Date(),
-                amount: 0, // Aquí puedes establecer el monto inicial del ticket según tus requisitos
+                amount: 0,
                 user: user._id,
-                total: 0, // Puedes establecer el total inicial del ticket según tus requisitos
-                totalQuantity: 0, // Puedes establecer la cantidad total inicial del ticket según tus requisitos
-                products: [],// Puedes inicializar la lista de productos del ticket según tus requisitos
+                total: 0,
+                totalQuantity: 0,
+                products: [],
             };
             const createdTicket = await ticketModel.create(newTicket);
             return createdTicket;

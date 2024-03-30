@@ -58,7 +58,6 @@ router.post('/product', authToken, handlePolicies(['admin', 'premium']), uploade
       return res.status(400).send({ status: 'ERR', data: config.errorsDictionary.FEW_PARAMETERS });
     }
 
-    // Cloudinary upload para todas las imágenes
     const cloudImages = await Promise.all(images.map((image) => cloudinary.uploader.upload(image)));
 
     const ownerId = req.user.sub
@@ -77,7 +76,6 @@ router.post('/product', authToken, handlePolicies(['admin', 'premium']), uploade
     const result = await controller.addProduct(newContent);
     res.status(200).send({ status: 'OK', data: result });
   } catch (err) {
-    console.error('Error al crear el producto:', err);
     return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
   }
 });
@@ -117,7 +115,6 @@ router.put('/product/:id', authToken, handlePolicies(['admin', 'premium']), uplo
     const product = await controller.updateProduct(id, updatedProduct, { new: true });
     res.status(200).send({ status: 'OK', data: product });
   } catch (error) {
-    // Aquí, si hay un error, puedes enviar un mensaje de error específico al cliente
     res.status(500).send({ status: 'ERR', data: 'Hubo un error al modificar el producto. Puede que este producto no sea de tu propiedad.' });
   }
 });
@@ -157,20 +154,19 @@ router.delete('/product/:id', authToken, handlePolicies(['admin', 'premium']), a
     console.log('Producto eliminado con éxito:', result);
     res.status(200).send({ status: 'OK', data: result });
 
-     // Si el producto pertenece a un usuario premium, enviar un correo electrónico
-     if (req.user.role === 'premium') {
+    if (req.user.role === 'premium') {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         port: 587,
         auth: {
-            user: config.GOOGLE_APP_EMAIL,
-            pass: config.GOOGLE_APP_PASS
+          user: config.GOOGLE_APP_EMAIL,
+          pass: config.GOOGLE_APP_PASS
         }
-    });
+      });
 
-    const mailOptions = {
-      from: 'fravega@gmail.com',
-      to: req.user.email,
+      const mailOptions = {
+        from: 'fravega@gmail.com',
+        to: req.user.email,
         subject: 'Producto eliminado',
         text: `El producto ${existingProduct.title} ha sido eliminado de tu cuenta. Si no realizaste esta acción, por favor contáctanos.`
       };
@@ -184,7 +180,6 @@ router.delete('/product/:id', authToken, handlePolicies(['admin', 'premium']), a
       });
     }
   } catch (err) {
-    console.error('Error al intentar eliminar el producto:', err);
     return next(new CustomError(config.errorsDictionary.INTERNAL_ERROR));
   }
 });

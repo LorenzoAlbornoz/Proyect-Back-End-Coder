@@ -34,7 +34,6 @@ router.post('/category', uploader.single('image'), async (req, res) => {
       return res.status(400).send({ status: 'ERR', data: 'Falta el nombre de la categoria' });
     }
 
-    // Cloudinary upload
     const cloudImg = await cloudinary.uploader.upload(req.file.path);
 
     const newContent = {
@@ -54,7 +53,6 @@ router.put('/category/:id', uploader.single('image'), async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
 
-    // Verificar si la categoría existe
     const existingCategory = await categoryModel.findById(id);
     if (!existingCategory) {
       return res.status(404).send({ status: 'ERR', data: 'La categoría no fue encontrada' });
@@ -62,9 +60,8 @@ router.put('/category/:id', uploader.single('image'), async (req, res) => {
 
     let updatedCategory;
 
-    // Verificar si se proporcionó una nueva imagen
     if (req.file) {
-      // Cloudinary upload
+
       const cloudImg = await cloudinary.uploader.upload(req.file.path);
 
       updatedCategory = {
@@ -76,7 +73,6 @@ router.put('/category/:id', uploader.single('image'), async (req, res) => {
     const category = await categoryController.updateCategory(id, updatedCategory, { new: true });
     res.status(200).send({ status: 'OK', category });
   } catch (error) {
-    console.error(error);
     res.status(500).send({ status: 'ERR', data: 'Hubo un error en el servidor' });
   }
 });

@@ -2,11 +2,11 @@ import userModel from "../models/userSchema.js";
 import cartModel from "../models/cartSchema.js";
 import favoriteModel from "../models/favoriteSchema.js"
 import ticketModel from "../models/ticketSchema.js"
-import { encryptPassword} from "../utils.js"; 
+import { encryptPassword } from "../utils.js";
 import mongoose from 'mongoose';
 
-export class UserService{
-    constructor() { 
+export class UserService {
+    constructor() {
     }
 
     async getUsers() {
@@ -28,7 +28,7 @@ export class UserService{
             if (!user) {
                 throw new Error("Usuario no encontrado");
             }
-            
+
             return {
                 mensaje: "Usuario encontrado",
                 status: 200,
@@ -44,35 +44,30 @@ export class UserService{
             if (!mongoose.Types.ObjectId.isValid(userId)) {
                 throw new Error("Formato de userId inválido");
             }
-    
-            // Obtener el usuario antes de eliminarlo
+
             const user = await userModel.findById(userId);
-    
+
             if (!user) {
                 return {
                     mensaje: "Usuario no encontrado",
                     status: 404,
                 };
             }
-    
-            // Eliminar el carrito si existe
+
             if (user.cart) {
                 await cartModel.findByIdAndDelete(user.cart);
             }
-    
-            // Eliminar la lista de favoritos si existe
+
             if (user.favorite) {
                 await favoriteModel.findByIdAndDelete(user.favorite);
             }
 
-             // Eliminar la lista de favoritos si existe
-             if (user.ticket) {
+            if (user.ticket) {
                 await ticketModel.findByIdAndDelete(user.ticket);
             }
-    
-            // Eliminar al usuario
+
             const deletedUser = await userModel.findByIdAndDelete(userId);
-    
+
             if (deletedUser) {
                 return {
                     mensaje: "Usuario y sus datos asociados eliminados correctamente",
@@ -93,30 +88,26 @@ export class UserService{
     async updateUser(id, updatedUser) {
         try {
             const user = await userModel.findByIdAndUpdate(id, updatedUser, { new: true });
-        
+
             if (!user) {
-              // Si no se encuentra el usuario, puedes devolver un código 404
-              return {
-                mensaje: "Usuario no encontrado",
-                status: 404
-              };
+                return {
+                    mensaje: "Usuario no encontrado",
+                    status: 404
+                };
             }
-        
-            // Si se actualiza correctamente, devuelves un código 200 y la información del usuario
+
             return {
-              mensaje: "Usuario modificado correctamente",
-              status: 200,
-              user
+                mensaje: "Usuario modificado correctamente",
+                status: 200,
+                user
             };
-          } catch (err) {
-            console.error(err); // Imprime el error en la consola
-            // En caso de error, puedes devolver un código 500
+        } catch (err) {
             return {
-              mensaje: "Error interno del servidor",
-              status: 500
+                mensaje: "Error interno del servidor",
+                status: 500
             };
-          }
-        };
+        }
+    };
 
     async getUsersPaginated(page, limit) {
         try {

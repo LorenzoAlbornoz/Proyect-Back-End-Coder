@@ -5,7 +5,7 @@ const productService = new ProductService();
 export class ProductController {
     constructor() {
     }
-    
+
     async getProducts() {
         try {
             return await productService.getProducts()
@@ -13,7 +13,7 @@ export class ProductController {
             return err.message
         }
     }
-    
+
     async getProductById(id) {
         try {
             return await productService.getProductById(id)
@@ -22,7 +22,7 @@ export class ProductController {
         }
     }
 
-    async getProductsByCategory(categoryName){
+    async getProductsByCategory(categoryName) {
         try {
             return await productService.getProductsByCategory(categoryName)
         } catch (err) {
@@ -62,7 +62,7 @@ export class ProductController {
         }
     }
 
-    async mockingProducts(qty){
+    async mockingProducts(qty) {
         try {
             return await productService.mockingProducts(qty)
         } catch (err) {
@@ -70,7 +70,7 @@ export class ProductController {
         }
     }
 
-    async searchProductsByName(productName){
+    async searchProductsByName(productName) {
         try {
             return await productService.searchProductsByName(productName)
         } catch (err) {
@@ -78,7 +78,7 @@ export class ProductController {
         }
     }
 
-    async toggleProductFeaturedStatus(id){
+    async toggleProductFeaturedStatus(id) {
         try {
             return await productService.toggleProductFeaturedStatus(id)
         } catch (err) {
@@ -86,9 +86,9 @@ export class ProductController {
         }
     }
 
-    async toggleProductOfferStatus(id){
+    async toggleProductOfferStatus(id) {
         try {
-           return await productService.toggleProductOfferStatus(id)
+            return await productService.toggleProductOfferStatus(id)
         } catch (err) {
             return err.message;
         }

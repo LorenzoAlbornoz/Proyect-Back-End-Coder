@@ -9,7 +9,7 @@ export class ProductService {
     async addProduct(product) {
         try {
             const products = await productModel.create(product);
-            return products 
+            return products
         } catch (err) {
             return err.message;
         }
@@ -18,7 +18,7 @@ export class ProductService {
     async getProductsByCategory(categoryName) {
         try {
             const query = productModel.find();
-    
+
             if (categoryName) {
                 query.populate({
                     path: 'category',
@@ -27,20 +27,19 @@ export class ProductService {
             } else {
                 query.populate('category');
             }
-    
+
             const products = await query.exec();
-    
-            // Filtrar productos después de la consulta basada en la categoría
+
             const filteredProducts = categoryName
                 ? products.filter(product => product.category && product.category.name === categoryName)
                 : products;
-    
+
             return filteredProducts;
         } catch (err) {
             return err.message;
         }
-    }    
-    
+    }
+
     async getProducts() {
         try {
             const products = await productModel.find().populate("category")
@@ -61,88 +60,60 @@ export class ProductService {
 
     async updateProduct(id, newContent) {
         try {
-          // Obtener el producto antes de la actualización para acceder a las URLs de las imágenes
-          const product = await productModel.findById(id);
-      
-          // Console.log para las URLs de las imágenes antes de la actualización
-          console.log('URLs de las imágenes antes de la actualización:', product.images);
-      
-          // Verificar si se proporcionan nuevas imágenes en la actualización
-          if (newContent.images && newContent.images.length > 0) {
-            // Actualizar el producto en la base de datos con las nuevas imágenes
-            const updatedProduct = await productModel.findByIdAndUpdate(id, newContent, { new: true });
-      
-            // Verificar si el producto original tenía URLs de imágenes
-            if (product && product.images && product.images.length > 0) {
-              // Extraer los public_id de las URLs de las imágenes en Cloudinary
-              const publicIds = product.images.map(url =>
-                url.split('/').pop().replace(/\.[^/.]+$/, '')
-              );
-      
-              // Eliminar las imágenes antiguas de Cloudinary
-              await Promise.all(publicIds.map(publicId =>
-                cloudinary.uploader.destroy(publicId)
-              ));
-            }
-      
-            // Console.log para el resultado de la actualización en la base de datos
-            console.log('Resultado de la actualización en la base de datos:', updatedProduct);
-      
-            return updatedProduct;
-          } else {
-            // Si no se proporcionan nuevas imágenes, incluir las imágenes existentes en el objeto newContent
-            newContent.images = product.images || [];
-      
-            // Actualizar el producto sin eliminar las imágenes antiguas
-            const updatedProductWithoutImages = await productModel.findByIdAndUpdate(id, newContent, { new: true });
-      
-            // Console.log para el resultado de la actualización en la base de datos
-            console.log('Resultado de la actualización en la base de datos:', updatedProductWithoutImages);
-      
-            return updatedProductWithoutImages;
-          }
-        } catch (err) {
-          // Console.log para manejar errores
-          console.error('Error en la actualización:', err.message);
-          return err.message;
-        }
-      }
-      
-      async deleteProduct(id) {
-        try {
-            // Obtener el producto antes de eliminarlo para acceder a las URLs de las imágenes
             const product = await productModel.findById(id);
-    
-            // Console.log para las URLs de las imágenes antes de la eliminación
-            console.log('URLs de las imágenes antes de la eliminación:', product.images);
-    
-            // Eliminar el producto de la base de datos
+
+            if (newContent.images && newContent.images.length > 0) {
+
+                const updatedProduct = await productModel.findByIdAndUpdate(id, newContent, { new: true });
+
+                if (product && product.images && product.images.length > 0) {
+
+                    const publicIds = product.images.map(url =>
+                        url.split('/').pop().replace(/\.[^/.]+$/, '')
+                    );
+
+                    await Promise.all(publicIds.map(publicId =>
+                        cloudinary.uploader.destroy(publicId)
+                    ));
+                }
+
+                return updatedProduct;
+            } else {
+
+                newContent.images = product.images || [];
+
+                const updatedProductWithoutImages = await productModel.findByIdAndUpdate(id, newContent, { new: true });
+
+                return updatedProductWithoutImages;
+            }
+        } catch (err) {
+            return err.message;
+        }
+    }
+
+    async deleteProduct(id) {
+        try {
+            const product = await productModel.findById(id);
+
             const deletedProduct = await productModel.findByIdAndDelete(id);
-    
-            // Verificar si el producto existe y tiene URLs de imágenes
+
             if (product && product.images && product.images.length > 0) {
-                // Extraer los public_id de las URLs de las imágenes en Cloudinary
+
                 const publicIds = product.images.map(url =>
                     url.split('/').pop().replace(/\.[^/.]+$/, '')
                 );
-    
-                // Eliminar todas las imágenes de Cloudinary
+
                 await Promise.all(publicIds.map(publicId =>
                     cloudinary.uploader.destroy(publicId)
                 ));
             }
-    
-            // Console.log para el resultado de la eliminación en la base de datos
-            console.log('Resultado de la eliminación en la base de datos:', deletedProduct);
-    
+
             return deletedProduct;
         } catch (err) {
-            // Console.log para manejar errores
-            console.error('Error en la eliminación:', err.message);
             return err.message;
         }
     }
-    
+
 
     async paginate(filter, options) {
         try {
@@ -156,7 +127,6 @@ export class ProductService {
         try {
             const mockProducts = [];
 
-            // Generar productos simulados
             for (let i = 0; i < qty; i++) {
                 const products = {
                     _id: faker.database.mongodbObjectId(),
@@ -180,29 +150,28 @@ export class ProductService {
 
     async searchProductsByName(productName) {
         try {
-            // Utiliza la función de búsqueda en tu modelo de productos
             const filteredProducts = await productModel.find({ title: { $regex: productName, $options: 'i' } }).lean();
             return filteredProducts;
         } catch (err) {
-            throw new Error(err.message);
+            return err.message;
         }
     }
 
-    async toggleProductFeaturedStatus(id){
+    async toggleProductFeaturedStatus(id) {
         try {
             const product = await productModel.findById(id);
-            product.isFeatured = !product.isFeatured; 
+            product.isFeatured = !product.isFeatured;
             await product.save();
             return product
         } catch (err) {
-            return err.message; 
+            return err.message;
         }
     }
 
-    async toggleProductOfferStatus(id){
+    async toggleProductOfferStatus(id) {
         try {
             const product = await productModel.findById(id);
-            product.isOffer = !product.isOffer; 
+            product.isOffer = !product.isOffer;
             await product.save();
             return product
         } catch (err) {

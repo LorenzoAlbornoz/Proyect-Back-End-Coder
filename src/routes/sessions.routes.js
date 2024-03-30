@@ -14,13 +14,9 @@ router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        // Actualizar last_connection
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
-        // Realiza acciones adicionales si es necesario
-
-        // Genera un token de acceso
         const access_token = generateToken({
             sub: req.user._id,
             name: req.user.name,
@@ -34,7 +30,6 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
         res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error('Error en /api/googlecallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -43,19 +38,13 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
     }
 });
 
-// Ruta de autenticación de Facebook
 router.get('/facebook', passport.authenticate('facebook'));
 
-// Ruta de retorno después de la autenticación de Facebook
 router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
-        // Actualizar last_connection
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
-        // Realiza acciones adicionales si es necesario
-
-        // Genera un token de acceso
         const access_token = generateToken({
             sub: req.user._id,
             name: req.user.name,
@@ -69,7 +58,6 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
         res.redirect('http://localhost:5173/');
     } catch (error) {
-        console.error('Error en /api/facebookcallback:', error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
@@ -98,7 +86,7 @@ router.post('/login', async (req, res) => {
                 status: 400,
             });
         }
-        // Actualizar last_connection
+
         const userId = user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
 
@@ -110,12 +98,10 @@ router.post('/login', async (req, res) => {
             cart: user.cart,
             favorite: user.favorite,
             ticket: user.ticket,
-            exp: expirationDate.getTime() / 1000 // Convertir a segundos
         }, '1h')
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.json({ token: access_token });
     } catch (error) {
-        console.error(error);
         res.status(500).json({
             mensaje: "Hubo un error, inténtelo más tarde",
             status: 500,
@@ -132,7 +118,6 @@ router.post('/register', passport.authenticate('registerAuth', { failureRedirect
     try {
         res.status(200).send({ status: 'OK', data: 'Usuario registrado, por favor revise su casilla de correo.' })
     } catch (err) {
-        console.log(err)
         res.status(500).send({ status: 'ERR', data: err.message })
     }
 })
@@ -187,7 +172,6 @@ router.post('/user/recover', async (req, res) => {
 
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
-                console.log(error);
                 res.status(500).send({ status: 'ERR', data: error.message });
             } else {
                 res.send({ Status: "Success" });
@@ -207,7 +191,7 @@ router.put('/user/reset/:id/:token', async (req, res) => {
         jwt.verify(token, config.PRIVATE_KEY, async (err, decoded) => {
             if (err) {
                 if (err.name === 'TokenExpiredError') {
-                    // Redirigir a /login si el token ha expirado
+
                     return res.redirect('http://localhost:5173/login');
                 } else {
                     return res.json({ Status: "Error con el token" });
@@ -218,18 +202,16 @@ router.put('/user/reset/:id/:token', async (req, res) => {
                     return res.status(404).json({ Status: "Usuario no encontrado" });
                 }
 
-                // Verificar si la nueva contraseña es igual a la actual
+
                 if (password === user.password) {
                     return res.status(400).json({ Status: "No se puede utilizar la misma contraseña" });
                 }
 
-                // Verificar si la nueva contraseña es igual a la anterior
                 const isSameAsPrevious = comparePassword(password, user.password);
                 if (isSameAsPrevious) {
                     return res.status(400).json({ Status: "SamePassword", Message: "La nueva contraseña es igual a la anterior" });
                 }
 
-                // Actualizar la contraseña
                 user.password = encryptPassword(password);
                 await user.save();
 
@@ -240,7 +222,6 @@ router.put('/user/reset/:id/:token', async (req, res) => {
         res.status(500).send({ status: 'ERR', data: err.message });
     }
 });
-
 
 router.get('/loggerTest', async (req, res) => {
     try {
