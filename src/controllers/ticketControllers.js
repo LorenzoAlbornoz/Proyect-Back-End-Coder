@@ -14,17 +14,18 @@ export class TicketController{
         }
     }
 
-    async createdTicket(){
+    async createdTicket(user){
         try {
-            return await ticketService.createdTicket({})
+            console.log(user)
+            return await ticketService.createdTicket(user)
         } catch (error) {
             return err.message
         }
     }
 
-    async getTicketsById(id) {
+    async getTicketsById(ticketId) {
         try {
-            return await ticketService.getTicketsById(id)
+            return await ticketService.getTicketsById(ticketId)
         } catch (error) {
             return err.message
         }

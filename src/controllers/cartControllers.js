@@ -124,9 +124,9 @@ export class CartController {
     }
   }
 
-  async processPurchase(cartId, userId){
+  async processPurchase(cartId, ticketId){
     try {
-      const result = await cartService.processPurchase(cartId, userId)
+      const result = await cartService.processPurchase(cartId, ticketId)
       if (result.success) {
         return { status: 'OK', data: { ticketId: result.ticketId } };
       } else {

@@ -46,7 +46,7 @@ const initPassport = () => {
             createdUser.cart = newCart._id;
             
              // Asigna la referencia del ticket al campo 'tickt' del usuario
-            const newTicket = await ticketController.createdTicket(newTicket)
+            const newTicket = await ticketController.createdTicket(createdUser)
     
             createdUser.ticket = newTicket._id;
 
@@ -125,7 +125,7 @@ const initPassport = () => {
             const newFavorite = await favoriteController.createFavorite(createdUser);
             createdUser.favorite = newFavorite._id;
 
-            const newTicket = await ticketController.createdTicket(newTicket)
+            const newTicket = await ticketController.createdTicket(createdUser)
              createdUser.ticket = newTicket._id;
     
             await createdUser.save();
@@ -167,18 +167,26 @@ const initPassport = () => {
             };
     
             const createdUser = await userModel.create(newUser);
-            
+
             console.log('Autenticación exitosa con Facebook');
-            
+    
             // Realiza acciones adicionales después de la creación del usuario (por ejemplo, carritos y favoritos)
             const newCart = await cartController.createCart(createdUser);
             createdUser.cart = newCart._id;
-            
+    
+            console.log('Nuevo carrito creado:', newCart);
+    
             const newFavorite = await favoriteController.createFavorite(createdUser);
             createdUser.favorite = newFavorite._id;
-            
-            const newTicket = await ticketController.createdTicket(newTicket)
+    
+            console.log('Nuevo favorito creado:', newFavorite);
+    
+            const newTicket = await ticketController.createdTicket(createdUser);
             createdUser.ticket = newTicket._id;
+    
+            console.log('Nuevo ticket creado:', newTicket);
+
+            await createdUser.save();
     
             // Devolver el nuevo usuario creado
             return done(null, createdUser);
