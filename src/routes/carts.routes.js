@@ -40,11 +40,11 @@ router.get('/cart/quantity/:cartId', async (req, res) => {
   }
 });
 
-router.post('/cart/:cartId/user/:userId/purchase', async (req, res) => {
+router.post('/cart/:cartId/ticket/:ticketId/purchase', async (req, res) => {
   try {
     const cartId = req.params.cartId;
-    const userId = req.params.userId;
-    const result = await controller.processPurchase(cartId, userId);
+    const ticketId = req.params.ticketId;
+    const result = await controller.processPurchase(cartId, ticketId);
     if (result.status === 'OK') {
       res.status(200).send(result);
     } else {
@@ -87,9 +87,6 @@ router.post('/cart/:cid/product/:pid', authToken, handlePolicies(['user', 'premi
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
-
-// router.get('/success', (req, res) => { res.redirect('/success.html') });
-// router.get('/cancel', (req, res) => { res.redirect('/cancel.html') });
 
 router.post('/payment-attempt/:cid', async (req, res) => {
   try {

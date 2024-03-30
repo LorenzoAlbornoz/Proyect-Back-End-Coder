@@ -176,20 +176,19 @@ export class CartService {
         }
     }
 
-    async processPurchase(cartId, userId) {
-        let ticket;
-    
+    async processPurchase(cartId, ticketId) {
         try {
-            const user = await userModel.findById(userId);
-    
-            if (!user) {
-                throw new Error('No se encuentra el usuario');
-            }
     
             const cart = await cartModel.findById(cartId).populate('products.product');
     
             if (!cart) {
                 throw new Error('No se encuentra el carrito');
+            }
+
+            const ticket = await ticketModel.findById(ticketId);
+
+            if (!ticket) {
+                throw new Error('No se encuentra el ticket');
             }
     
             const ticketItems = [];
@@ -231,20 +230,18 @@ export class CartService {
         // Calcular totalQuantity
         const totalQuantity = filteredTicketItems.reduce((total, item) => total + item.quantity, 0);
 
-        // Crear el ticket con todos los campos y los productos filtrados
-        const ticket = await ticketModel.create({
-            purchase_datetime: new Date(),
-            amount: totalAmount,
-            purchaser: user._id,
-            products: filteredTicketItems.map(item => ({
-                product: item.product,
-                quantity: item.quantity
-            })),
-            total: totalAmount,
-            totalQuantity: totalQuantity,
-        });
+       // Actualizar el ticket con los datos calculados
+       ticket.purchase_datetime = new Date();
+       ticket.amount = totalAmount;
+       ticket.total = totalAmount;
+       ticket.totalQuantity = totalQuantity;
+       ticket.products = filteredTicketItems.map(item => ({
+           product: item.product,
+           quantity: item.quantity
+       }));
+       await ticket.save();
 
-            return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket };
+            return { success: true, message: 'Compra procesada exitosamente', ticketId: ticket._id };
         } catch (error) {
             return { success: false, error: error.message };
         }

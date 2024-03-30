@@ -14,9 +14,9 @@ router.get('/tickets', async (req, res) => {
     }
   })
 
-  router.get('/ticket/:id', async (req, res) => {
+  router.get('/ticket/:ticketId', async (req, res) => {
     try {
-      const ticket =  await ticketController.getTicketsById(req.params.id);
+      const ticket =  await ticketController.getTicketsById(req.params.ticketId);
       res.status(200).send({status: 'OK', ticket})
     } catch (error) {
       res.status(500).json({ mensaje: "Hubo un error, inténtelo más tarde", status: 500 });

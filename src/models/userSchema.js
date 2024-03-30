@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'favorites'
     },
+    ticket:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'tickets'
+    },
     role: {
         type:String,
         default: "user",
@@ -48,10 +52,6 @@ const userSchema = new mongoose.Schema({
       }],
       last_connection: {
         type: Date,
-      },
-      ticket:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'tickets'
       }
 })
 
