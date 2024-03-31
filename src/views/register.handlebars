@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Usuario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .common-btn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .common-btn:hover {
+            background-color: #218838;
+        }
+
+        .register-container {
+            max-width: 360px;
+            margin: auto;
+            margin-top: 64px;
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: bold;
+        }
+
+        h2 {
+            color: #555;
+        }
+
+        form {
+            margin-top: 32px;
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .input-group-text {
+            background-color: #F8A126;
+            color: #fff;
+            border: none;
+        }
+
+        .form-control {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            width: calc(100% - 32px); /* Ancho igual al 100% menos el espacio del padding */
+        }
+
+        a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: calc(100% - 32px); /* Ancho igual al 100% menos el espacio del padding */
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-container">
+        <h1><b>CODERStore</b></h1>
+        <h2>Registro de Usuario</h2>
+
+        <form action="/api/register" method="POST">
+            <div class="input-group">
+                <span class="input-group-text"><i class="far fa-user"></i></span>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Ingresa tu nombre" required>
+            </div>
+
+            <div class="input-group">
+                <span class="input-group-text"><i class="far fa-envelope"></i></span>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Ingresa tu email" required>
+            </div>
+
+            <div class="input-group">
+                <span class="input-group-text"><i class="far fa-calendar"></i></span>
+                <input type="text" id="age" name="age" class="form-control" placeholder="Ingresa tu edad" required>
+            </div>
+
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" id="password" name="password" class="form-control"
+                    placeholder="Ingresa tu contraseña" required>
+            </div>
+
+            <button type="submit" class="btn btn-success">Registrarse</button>
+        </form>
+
+        <p style="margin-top: 16px;">
+            <a href="/login">¿Ya tienes una cuenta? Iniciar sesión</a>
+        </p>
+    </div>
+
+    <!-- Agrega la referencia a Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+
+</html>

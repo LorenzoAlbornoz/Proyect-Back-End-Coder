@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edicion de Productos</title>
+</head>
+<body>
+    <h1>Edicion de Productos</h1>
+    <form action="http://localhost:8080/api/products/9" method="put" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Titulo">
+        <br />
+        <input type="text" name="description" placeholder="Descripción">
+        <br />
+        <input type="text" name="code" placeholder="Codigo">
+        <br />
+        <input type="number" name="price" placeholder="Precio">
+        <br />
+        <input type="number" name="stock" placeholder="Stock">
+        <br />
+        <input type="text" name="category" placeholder="Categoria">
+        <br />
+        <input type="file" name="fotos">
+        <br>
+        <label for="status">Status:</label>
+        <input type="checkbox" name="status" >
+        <br /><br />
+        <button type="submit">Cargar</button>
+    </form>
+</body>
+</html>

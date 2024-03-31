@@ -1,6 +1,6 @@
 import productModel from '../models/productSchema.js'
 import cloudinary from 'cloudinary'
-import { faker } from '@faker-js/faker';
+import  faker  from '@faker-js/faker';
 
 export class ProductService {
     constructor() {
