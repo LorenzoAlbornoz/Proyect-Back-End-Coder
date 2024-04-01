@@ -57,8 +57,8 @@ export class CartController {
         const data = {
           line_items: lineItems,
           mode: 'payment',
-          success_url: 'http://localhost:5173/cart/success',
-          cancel_url: 'http://localhost:5173/cart/cancel'
+          success_url: 'https://frabega.netlify.app/cart/success',
+          cancel_url: 'https://frabega.netlify.app/cart/cancel'
         };
 
         const service = new PaymentService();
