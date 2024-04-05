@@ -153,7 +153,7 @@ router.post('/user/recover', async (req, res) => {
                 <p>Hola ${user.name},</p>
                 <p>Recibes este correo porque has solicitado restablecer tu contraseña en nuestro sistema.</p>
                 <p>Para cambiar tu contraseña, haz clic en el siguiente botón:</p>
-                <a href="http://localhost:5173/reset_password/${user._id}/${encodeURIComponent(token)}">
+                <a href="https://frabega.netlify.app/reset_password/${user._id}/${encodeURIComponent(token)}">
                     <button style="background-color: #4CAF50; /* Green */
                     border: none;
                     color: white;
