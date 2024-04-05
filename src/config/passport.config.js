@@ -111,8 +111,8 @@ const initPassport = () => {
             await createdUser.save();
 
             return cb(err, createdUser);
-        } catch (error) {
-            return cb(error);
+        } catch (err) {
+            return cb(err);
         }
     }));
 
