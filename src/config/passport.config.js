@@ -77,7 +77,7 @@ const initPassport = () => {
     passport.use(new GoogleStrategy({
         clientID: config.GOOGLE_AUTH.clientId,
         clientSecret: config.GOOGLE_AUTH.clientSecret,
-        callbackURL: "http://localhost:8080/api/googlecallback"
+        callbackURL: "https://frabega.netlify.app/api/googlecallback"
     }, async function (profile, done) {
         try {
             let user = await userModel.findOne({ googleId: profile.id });
@@ -120,7 +120,7 @@ const initPassport = () => {
     passport.use(new FacebookStrategy({
         clientID: config.FACEBOOK_AUTH.clientId,
         clientSecret: config.FACEBOOK_AUTH.clientSecret,
-        callbackURL: "http://localhost:8080/api/facebookcallback"
+        callbackURL: "https://frabega.netlify.app/api/facebookcallback"
     }, async function (profile, done) {
         try {
             let user = await userModel.findOne({ facebookId: profile.id });

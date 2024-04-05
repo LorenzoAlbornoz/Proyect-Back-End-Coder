@@ -119,7 +119,6 @@ router.put('/product/:id', authToken, handlePolicies(['admin', 'premium']), uplo
   }
 });
 
-
 router.put('/product/featured/:id', authToken, handlePolicies(['admin', 'premium']), async (req, res) => {
   const { id } = req.params;
   try {
