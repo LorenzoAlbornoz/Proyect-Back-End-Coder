@@ -83,13 +83,13 @@ const initPassport = () => {
             let user = await userModel.findOne({ googleId: profile.id });
 
             if (user) {
-                return cb(err, user);
+                return cb(null, user);
             }
 
             let existingUser = await userModel.findOne({ name: profile.displayName });
 
             if (existingUser) {
-                return cb(err, existingUser);
+                return cb(null, existingUser);
             }
 
             const newUser = {
@@ -110,7 +110,7 @@ const initPassport = () => {
 
             await createdUser.save();
 
-            return cb(err, createdUser);
+            return cb(null, createdUser);
         } catch (err) {
             return cb(err);
         }
