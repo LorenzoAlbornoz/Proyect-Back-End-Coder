@@ -78,18 +78,18 @@ const initPassport = () => {
         clientID: config.GOOGLE_AUTH.clientId,
         clientSecret: config.GOOGLE_AUTH.clientSecret,
         callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/googlecallback"
-    }, async function (accessToken, refreshToken, profile, cb) {
+    }, async function (profile, done) {
         try {
             let user = await userModel.findOne({ googleId: profile.id });
 
             if (user) {
-                return cb(null, user);
+                return done(null, user);
             }
 
             let existingUser = await userModel.findOne({ name: profile.displayName });
 
             if (existingUser) {
-                return cb(null, existingUser);
+                return done(null, existingUser);
             }
 
             const newUser = {
@@ -110,9 +110,9 @@ const initPassport = () => {
 
             await createdUser.save();
 
-            return cb(null, createdUser);
-        } catch (err) {
-            return cb(err);
+            return done(null, createdUser);
+        } catch (error) {
+            return done(error);
         }
     }));
 
