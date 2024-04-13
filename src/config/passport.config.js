@@ -77,7 +77,7 @@ const initPassport = () => {
     passport.use(new GoogleStrategy({
         clientID: config.GOOGLE_AUTH.clientId,
         clientSecret: config.GOOGLE_AUTH.clientSecret,
-        callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/auth/google/callback"
+        callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/googlecallback"
     }, async function (profile, done) {
         try {
             let user = await userModel.findOne({ googleId: profile.id });
@@ -122,7 +122,7 @@ const initPassport = () => {
           {
             clientID: process.env.FACEBOOK_CLIENT_ID || config.FACEBOOK_AUTH.clientId,
             clientSecret: process.env.FACEBOOK_SECRET_KEY || config.FACEBOOK_AUTH.clientSecret,
-            callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/auth/facebook/callback",
+            callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/facebookcallback",
           },
           async function (accessToken, refreshToken, profile, cb) {
             try {

@@ -10,9 +10,9 @@ import User from "../models/userSchema.js"
 initPassport()
 const router = Router();
 
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
-router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
+router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
@@ -38,9 +38,9 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
     }
 });
 
-router.get('/auth/facebook', passport.authenticate('facebook'));
+router.get('/facebook', passport.authenticate('facebook'));
 
-router.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
+router.get('/facebookcallback', passport.authenticate('facebook', { failureRedirect: '/login' }), async (req, res) => {
     try {
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
