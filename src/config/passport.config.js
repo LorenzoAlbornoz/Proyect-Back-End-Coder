@@ -117,47 +117,48 @@ const initPassport = () => {
     }));
 
 
-    passport.use(new FacebookStrategy({
-        clientID: config.FACEBOOK_AUTH.clientId,
-        clientSecret: config.FACEBOOK_AUTH.clientSecret,
-        callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/auth/facebook/callback"
-    }, async function (profile, done) {
-        try {
-            let user = await userModel.findOne({ facebookId: profile.id });
-
-            if (user) {
-                return done(null, user);
-            }
-
-            let existingUser = await userModel.findOne({ name: profile.displayName });
-
-            if (existingUser) {
-                return done(null, existingUser);
-            }
-
-            const newUser = {
+    passport.use(
+        new FacebookStrategy(
+          {
+            clientID: process.env.FACEBOOK_CLIENT_ID || config.FACEBOOK_AUTH.clientId,
+            clientSecret: process.env.FACEBOOK_SECRET_KEY || config.FACEBOOK_AUTH.clientSecret,
+            callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/auth/facebook/callback",
+          },
+          async function (accessToken, refreshToken, profile, cb) {
+            try {
+              let user = await userModel.findOne({ facebookId: profile.id });
+      
+              if (user) {
+                console.log('Facebook User already exists in DB..');
+                return cb(null, user);
+              }
+      
+              const newUser = {
                 name: profile.displayName,
                 facebookId: profile.id
-            };
-
-            const createdUser = await userModel.create(newUser);
-
-            const newCart = await cartController.createCart(createdUser);
-            createdUser.cart = newCart._id;
-
-            const newFavorite = await favoriteController.createFavorite(createdUser);
-            createdUser.favorite = newFavorite._id;
-
-            const newTicket = await ticketController.createdTicket(createdUser);
-            createdUser.ticket = newTicket._id;
-
-            await createdUser.save();
-
-            return done(null, createdUser);
-        } catch (error) {
-            return done(error);
-        }
-    }));
+              };
+      
+              const createdUser = await userModel.create(newUser);
+      
+              const newCart = await cartController.createCart(createdUser);
+              createdUser.cart = newCart._id;
+      
+              const newFavorite = await favoriteController.createFavorite(createdUser);
+              createdUser.favorite = newFavorite._id;
+      
+              const newTicket = await ticketController.createdTicket(createdUser);
+              createdUser.ticket = newTicket._id;
+      
+              await createdUser.save();
+      
+              console.log('Adding new facebook user to DB..');
+              return cb(null, createdUser);
+            } catch (error) {
+              return cb(error);
+            }
+          }
+        )
+      );
 
     const verifyJwt = async (payload, done) => {
         try {
