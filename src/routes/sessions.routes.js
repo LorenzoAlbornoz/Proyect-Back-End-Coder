@@ -28,7 +28,6 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
         }, '1h');
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
-        res.json({ token: access_token });
         res.redirect('https://frabega.netlify.app');
     } catch (error) {
         res.status(500).json({
@@ -57,7 +56,6 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
         }, '1h');
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
-        res.json({ token: access_token });
         res.redirect('https://frabega.netlify.app');
     } catch (error) {
         res.status(500).json({
