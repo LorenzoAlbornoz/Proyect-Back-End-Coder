@@ -28,7 +28,7 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
         }, '1h');
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
-        res.redirect('http://localhost:5173/');
+        res.redirect('https://frabega.netlify.app');
     } catch (error) {
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
@@ -56,7 +56,7 @@ router.get('/facebookcallback', passport.authenticate('facebook', { failureRedir
         }, '1h');
         res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
         res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
-        res.redirect('http://localhost:5173/');
+        res.redirect('https://frabega.netlify.app');
     } catch (error) {
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
@@ -153,7 +153,7 @@ router.post('/user/recover', async (req, res) => {
                 <p>Hola ${user.name},</p>
                 <p>Recibes este correo porque has solicitado restablecer tu contraseña en nuestro sistema.</p>
                 <p>Para cambiar tu contraseña, haz clic en el siguiente botón:</p>
-                <a href="http://localhost:5173/reset_password/${user._id}/${encodeURIComponent(token)}">
+                <a href="https://frabega.netlify.app/${user._id}/${encodeURIComponent(token)}">
                     <button style="background-color: #4CAF50; /* Green */
                     border: none;
                     color: white;
@@ -192,7 +192,7 @@ router.put('/user/reset/:id/:token', async (req, res) => {
             if (err) {
                 if (err.name === 'TokenExpiredError') {
 
-                    return res.redirect('http://localhost:5173/login');
+                    return res.redirect('https://frabega.netlify.app/login');
                 } else {
                     return res.json({ Status: "Error con el token" });
                 }

@@ -77,8 +77,9 @@ const initPassport = () => {
     passport.use(new GoogleStrategy({
         clientID: config.GOOGLE_AUTH.clientId,
         clientSecret: config.GOOGLE_AUTH.clientSecret,
-        callbackURL: "http://localhost:8080/api/googlecallback"
-    }, async function (profile, done) {
+        callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/googlecallback"
+    },
+    async function (accessToken, refreshToken, profile, done) {
         try {
             let user = await userModel.findOne({ googleId: profile.id });
 
@@ -114,25 +115,23 @@ const initPassport = () => {
         } catch (error) {
             return done(error);
         }
-    }));
+    }
+)
+);
 
 
     passport.use(new FacebookStrategy({
         clientID: config.FACEBOOK_AUTH.clientId,
         clientSecret: config.FACEBOOK_AUTH.clientSecret,
-        callbackURL: "http://localhost:8080/api/facebookcallback"
-    }, async function (profile, done) {
+        callbackURL: "https://proyect-back-end-coder-8.onrender.com/api/facebookcallback"
+    },
+    async function (accessToken, refreshToken, profile, cb) {
         try {
             let user = await userModel.findOne({ facebookId: profile.id });
 
             if (user) {
-                return done(null, user);
-            }
-
-            let existingUser = await userModel.findOne({ name: profile.displayName });
-
-            if (existingUser) {
-                return done(null, existingUser);
+                console.log('Facebook User already exists in DB..');
+                return cb(null, user);
             }
 
             const newUser = {
@@ -153,11 +152,14 @@ const initPassport = () => {
 
             await createdUser.save();
 
-            return done(null, createdUser);
+            console.log('Adding new facebook user to DB..');
+            return cb(null, createdUser);
         } catch (error) {
-            return done(error);
+            return cb(error);
         }
-    }));
+    }
+)
+);
 
     const verifyJwt = async (payload, done) => {
         try {
