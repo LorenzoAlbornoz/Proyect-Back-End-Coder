@@ -42,8 +42,14 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
         const user_data_json = JSON.stringify(user_data);
         console.log("Datos del usuario:", user_data_json);
 
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-        res.cookie('user_data', user_data_json, { maxAge: 60 * 60 * 1000, httpOnly: false });
+        const cookieOptions = {
+            maxAge: 60 * 60 * 1000, // Tiempo de vida de la cookie (en milisegundos)
+            httpOnly: true, // La cookie solo es accesible a través de HTTP
+            domain: 'https://frabega.netlify.app', // Cambia 'tu-dominio.com' por el dominio correcto de tu frontend
+          };
+
+          res.cookie('codertoken', access_token, cookieOptions);
+          res.cookie('user_data', user_data_json, cookieOptions);
 
         res.redirect('https://frabega.netlify.app');
     } catch (error) {
