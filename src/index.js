@@ -25,7 +25,7 @@ import config from './config.js'
 const app = express();
 
 app.use(cors({
-  origin: 'https://frabega.netlify.app',
+  origin: 'https://front-end-coder-d3u5a0j03-lorenzoalbornozs-projects.vercel.app/',
   credentials: true
 }))
 app.options('*', cors())
