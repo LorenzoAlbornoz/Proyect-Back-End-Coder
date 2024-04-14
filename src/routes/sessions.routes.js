@@ -14,8 +14,10 @@ router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get('/googlecallback', passport.authenticate('google', { failureRedirect: '/login' }), async (req, res) => {
     try {
+        console.log("Google callback endpoint hit.");
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { last_connection: new Date() });
+        console.log("Usuario autenticado:", req.user);
 
         const access_token = generateToken({
             sub: req.user._id,
@@ -26,10 +28,26 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
             favorite: req.user.favorite,
             ticket: req.user.ticket
         }, '1h');
-        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true })
-        res.cookie('user_data', JSON.stringify({ role: req.user.role, cart: req.user.cart, sub: req.user._id, favorite: req.user.favorite, ticket: req.user.ticket }), { maxAge: 60 * 60 * 1000, httpOnly: false });
+        console.log("Token generado:", access_token);
+
+        // Crear el objeto user_data
+        const user_data = {
+            role: req.user.role,
+            cart: req.user.cart,
+            sub: req.user._id,
+            favorite: req.user.favorite,
+            ticket: req.user.ticket
+        };
+
+        const user_data_json = JSON.stringify(user_data);
+        console.log("Datos del usuario:", user_data_json);
+
+        res.cookie('codertoken', access_token, { maxAge: 60 * 60 * 1000, httpOnly: true });
+        res.cookie('user_data', user_data_json, { maxAge: 60 * 60 * 1000, httpOnly: false });
+
         res.redirect('https://frabega.netlify.app');
     } catch (error) {
+        console.error("Error en el endpoint de Google callback:", error);
         res.status(500).json({
             mensaje: 'Hubo un error, inténtelo más tarde',
             status: 500,
